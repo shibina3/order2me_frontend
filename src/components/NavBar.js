@@ -14,6 +14,7 @@ const AppNavbar = (props) => {
   const sidebarRef = useRef(null);
   const [isAdmin, setAdmin] = useState(false);
   const [isDeliveryPartner, setDeliveryPartner] = useState(false);
+  const [cartItems, setCartItems] = useState(0);
 
   useEffect( () => {
     const fetchData = async () => {
@@ -32,6 +33,20 @@ const AppNavbar = (props) => {
       if(userData.data.delivery_partner) {
         setDeliveryPartner(true);
       }
+
+      const cartItemsRes = await fetch(`https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({userId: localStorage.getItem('userID'), path: "/get/cart"})
+      });
+
+      if (!cartItemsRes.ok) throw new Error("Failed to fetch cart items");
+
+      let storedCart = await cartItemsRes.json();        
+      storedCart = JSON.parse(storedCart.body);
+      setCartItems(storedCart.length);
     }
     fetchData();
   }, []);
@@ -81,8 +96,8 @@ const AppNavbar = (props) => {
         >
           <FaBars />
         </Button>
-        <Button className="no-bg mr-2 btn-link content-primary d-block d-sm-none order-3" onClick={() => setPage("search")}><FaSearch /></Button>
-        <Button className="no-bg mr-2 btn-link content-primary d-block d-sm-none order-3" onClick={() => setPage("cart")}><FaShoppingCart /></Button>
+        <Button className="no-bg m-0 btn-link content-primary d-block d-sm-none order-3" onClick={() => setPage("search")}><FaSearch /></Button>
+        <Button className="flex-imp no-bg m-0 btn-link content-primary d-block d-sm-none order-4" onClick={() => setPage("cart")}><FaShoppingCart /><span className="badge">{cartItems}</span></Button>
         <div className="d-none d-lg-flex justify-content-between w-100">
           <Nav className="mx-auto gap-5">
             <Nav.Link onClick={() => setPage('home')} className="content-primary">Home</Nav.Link>
@@ -93,9 +108,6 @@ const AppNavbar = (props) => {
           </Nav>
             <Form className="ml-auto d-flex align-items-center">
               <Button className="no-bg mr-2 btn-link content-primary d-none d-lg-block" onClick={() => setPage("search")}><FaSearch /></Button>
-              <Button className="no-bg mr-2 btn-link content-primary d-none d-lg-block" onClick={() => setPage("cart")}>
-                <FaShoppingCart />
-              </Button>
               <Button className="no-bg btn-link content-primary d-none d-lg-block" onClick={logOut}>
                 <FaSignInAlt />
               </Button>
@@ -121,7 +133,7 @@ const AppNavbar = (props) => {
               <Nav.Link onClick={() => {setPage('my_profile');toggleBreadcrumb();}} className="content-primary"><CgProfile className='sidebar-icons' /> My Profile</Nav.Link>
               <Nav.Link onClick={() => {setPage('purchase_history');toggleBreadcrumb();}} className="content-primary"><BsCartCheckFill className='sidebar-icons' />My Orders</Nav.Link>
               <Nav.Link onClick={() => {setPage('wishlist');toggleBreadcrumb();}} className="content-primary"><FaHeart className='sidebar-icons' />My Wishlist</Nav.Link>
-              <Nav.Link onClick={() => {setPage('cart');toggleBreadcrumb();}} className="content-primary"><FaShoppingCart className='sidebar-icons' />Cart</Nav.Link>
+              <Nav.Link onClick={() => {setPage('cart');toggleBreadcrumb();}} className="content-primary"><FaShoppingCart className='sidebar-icons' />Cart<span className="side-bar-badge">{cartItems}</span></Nav.Link>
               {
                 isAdmin ? <Nav.Link onClick={() => {setPage('admin');toggleBreadcrumb();}} className="content-primary"><RiAdminFill className='sidebar-icons' />Admin</Nav.Link> : <></>
               }

@@ -29,7 +29,7 @@
     margin-top: 10px;
   }
   .d-lg-flex {
-    display: flex !important;
+    /* display: flex !important; */
     width: 30% !important;
     order: 3;
   }
@@ -1074,4 +1074,37 @@ select {
 }
 .d-flex1 {
   display: flex;
+}
+.badge {
+  top: -8px !important;
+  right: 4px;
+  background-color: rgb(255 193 7);
+  color: black;
+  border-radius: 50%;
+  /* padding: 5px 7px; */
+  font-size: 10px;
+  font-weight: bold;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.side-bar-badge {
+  position: relative;
+  top: 2px;
+  right: -5px;
+  width: 17px;
+  height: 18px;
+  background-color: rgb(255 193 7);
+  color: black;
+  border-radius: 50%;
+  /* padding: 5px 7px; */
+  font-size: 10px;
+  font-weight: bold;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.flex-imp {
+  display: flex !important;
+  align-items: center;
 }
