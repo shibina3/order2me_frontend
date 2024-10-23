@@ -8,7 +8,7 @@ const Login = (props) => {
   const [isLogin, setIsLogin] = useState(true);
   const [username, setUsername] = useState('');
   const [alertMessage, setAlertMessage] = useState('');
-  const [alertType, setAlertType] = useState('danger')
+  const [alertType, setAlertType] = useState('danger');
 
   const handleLoginSubmit = async (e) => {
     e.preventDefault();

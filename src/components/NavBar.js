@@ -5,11 +5,36 @@ import { IoHome } from "react-icons/io5";
 import { CgProfile } from "react-icons/cg";
 import { BsCartCheckFill } from "react-icons/bs";
 import { IoMdLogOut } from "react-icons/io";
+import { RiAdminFill } from "react-icons/ri";
+import { MdDeliveryDining } from "react-icons/md";
 
 const AppNavbar = (props) => {
   const [showBreadcrumb, setShowBreadcrumb] = useState(false);
   const [isLogoutPopup, setShowLogoutPopup] = useState(false);
   const sidebarRef = useRef(null);
+  const [isAdmin, setAdmin] = useState(false);
+  const [isDeliveryPartner, setDeliveryPartner] = useState(false);
+
+  useEffect( () => {
+    const fetchData = async () => {
+      const userDetailRes = await fetch(`https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({email: localStorage.getItem('email'), path: "/get/user-detail"})
+      });
+      let userData = await userDetailRes.json();
+      userData = JSON.parse(userData.body);      
+      if(userData.data.admin) {
+        setAdmin(true);
+      }
+      if(userData.data.delivery_partner) {
+        setDeliveryPartner(true);
+      }
+    }
+    fetchData();
+  }, []);
 
   const toggleBreadcrumb = () => {
     setShowBreadcrumb(!showBreadcrumb);
@@ -57,6 +82,7 @@ const AppNavbar = (props) => {
           <FaBars />
         </Button>
         <Button className="no-bg mr-2 btn-link content-primary d-block d-sm-none order-3" onClick={() => setPage("search")}><FaSearch /></Button>
+        <Button className="no-bg mr-2 btn-link content-primary d-block d-sm-none order-3" onClick={() => setPage("cart")}><FaShoppingCart /></Button>
         <div className="d-none d-lg-flex justify-content-between w-100">
           <Nav className="mx-auto gap-5">
             <Nav.Link onClick={() => setPage('home')} className="content-primary">Home</Nav.Link>
@@ -66,7 +92,7 @@ const AppNavbar = (props) => {
             <Nav.Link onClick={() => setPage('cart')} className="content-primary">Cart</Nav.Link>
           </Nav>
             <Form className="ml-auto d-flex align-items-center">
-              <Button className="no-bg mr-2 btn-link content-primary d-none d-lg-block"><FaSearch /></Button>
+              <Button className="no-bg mr-2 btn-link content-primary d-none d-lg-block" onClick={() => setPage("search")}><FaSearch /></Button>
               <Button className="no-bg mr-2 btn-link content-primary d-none d-lg-block" onClick={() => setPage("cart")}>
                 <FaShoppingCart />
               </Button>
@@ -96,6 +122,12 @@ const AppNavbar = (props) => {
               <Nav.Link onClick={() => {setPage('purchase_history');toggleBreadcrumb();}} className="content-primary"><BsCartCheckFill className='sidebar-icons' />My Orders</Nav.Link>
               <Nav.Link onClick={() => {setPage('wishlist');toggleBreadcrumb();}} className="content-primary"><FaHeart className='sidebar-icons' />My Wishlist</Nav.Link>
               <Nav.Link onClick={() => {setPage('cart');toggleBreadcrumb();}} className="content-primary"><FaShoppingCart className='sidebar-icons' />Cart</Nav.Link>
+              {
+                isAdmin ? <Nav.Link onClick={() => {setPage('admin');toggleBreadcrumb();}} className="content-primary"><RiAdminFill className='sidebar-icons' />Admin</Nav.Link> : <></>
+              }
+              {
+                isDeliveryPartner ? <Nav.Link onClick={() => {setPage('delivery_partner');toggleBreadcrumb();}} className="content-primary"><MdDeliveryDining className='sidebar-icons' />Delivery Partner</Nav.Link> : <></>
+              }
               <Nav.Link onClick={showLogOutPopup} className="content-primary"><IoMdLogOut className='sidebar-icons'  />Logout</Nav.Link>
             </Nav>
           </div>

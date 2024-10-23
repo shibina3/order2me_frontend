@@ -23,6 +23,7 @@ export default function Items({ activeTab, categoryId }) {
                 });
                 itemsData = await itemsRes.json();
                 itemsData = JSON.parse(itemsData.body);
+                itemsData = itemsData.filter(cat => cat.location === localStorage.getItem('userCity'))
                 
                 itemsData = itemsData.filter(item => item.new_arrival);
             } else if( activeTab === "Popular Items") {
@@ -35,6 +36,7 @@ export default function Items({ activeTab, categoryId }) {
                 });
                 itemsData = await itemsRes.json();
                 itemsData = JSON.parse(itemsData.body);
+                itemsData = itemsData.filter(cat => cat.location === localStorage.getItem('userCity'))
                 itemsData = itemsData.filter(item => item.popular_item);
             } else {
                 const itemsRes = await fetch(`https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/`, {
@@ -241,7 +243,8 @@ export default function Items({ activeTab, categoryId }) {
                                     ₹{selectedPriceDetail.amount}
                                 </span>
                             </div>
-                            {cartQuantity > 0 ? (
+                            {item.stock === 'out-of-stock' ? <div className='m-3 text-danger'><span>Out of stock</span></div> :
+                            cartQuantity > 0 ? (
                                 <div className="mt-2 cart-controls">
                                     <button className="quantity-btn" onClick={() => handleDecrement(item.id)}>-</button>
                                     <span className="cart-quantity">{cartQuantity}</span>

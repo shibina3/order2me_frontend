@@ -15,6 +15,15 @@ import OrderPlaced from './components/OrderPlaced';
 import { IoIosArrowDown, IoIosArrowUp } from "react-icons/io";
 import Wishlist from './components/Wishlist';
 import SearchResults from './components/SaerchResults';
+import AdminDashboard from './components/adminAccess/AdminDashboard';
+import ManageLocations from './components/adminAccess/ManageLocations';
+import ManageCategories from './components/adminAccess/ManageCategories';
+import ManageAccess from './components/adminAccess/ManageAccess';
+import ManageDetails from './components/adminAccess/ManageDetails';
+import ManageDeliveryCharges from './components/adminAccess/ManageDeliveryCharges';
+import ManageProducts from './components/adminAccess/ManageProducts';
+import ManageOrders from './components/adminAccess/ManageOrders';
+import DeliveryPartnerDashboard from './components/DeliveryPartner/DeliveryPartnerDashboard';
 
 function App() {
   const [activePage, setActivePage] = useState(localStorage.getItem('email') ? 'home' : 'login');
@@ -23,16 +32,31 @@ function App() {
   const [city, setCity] = useState('');
   const [showCitySelection, setShowCitySelection] = useState(false);
   const [isLoading, setLoading] = useState(true);
+  const [ cities, setCities] = useState([]);
 
-  const cities = ['Chennai', 'Madurai', 'Trinelveli', 'Trichy', 'Salem'];
   const handleCityChange = (event) => {
     const selectedCity = event.target.value;
     setCity(selectedCity);
-    localStorage.setItem('userCity', selectedCity); // Save in localStorage
-    setShowCitySelection(false); // Hide city selection dropdown
+    localStorage.setItem('userCity', selectedCity); 
+    setShowCitySelection(false); 
+    window.location.reload();
   };
   
   useEffect(() => {
+    const fetchCities = async () => {
+      const getLocRes = await fetch(`https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({path: "/get/location" }),
+      });
+      let getLocData = await getLocRes.json();
+      getLocData = JSON.parse(getLocData?.body) || [];
+      let locations = getLocData?.map(loc => loc.name);
+      setCities(locations);
+    }
+    fetchCities();
     setTimeout(()=> {
       setLoading(false);
     }, 3000);
@@ -81,6 +105,15 @@ function App() {
         activePage === "order_placed" ? <OrderPlaced setActivePage={setActivePage} /> :
         activePage === "wishlist" ? <Wishlist /> :
         activePage === "search" ? <SearchResults /> :
+        activePage === "admin" ? <AdminDashboard setActivePage={setActivePage} /> :
+        activePage === "manage-locations" ? <ManageLocations setActivePage={setActivePage} /> :
+        activePage === "manage-categories" ? <ManageCategories setActivePage={setActivePage} /> :
+        activePage === "manage-access" ? <ManageAccess setActivePage={setActivePage} /> :
+        activePage === "manage-details" ? <ManageDetails setActivePage={setActivePage} /> :
+        activePage === "manage-delivery-charges" ? <ManageDeliveryCharges setActivePage={setActivePage} /> :
+        activePage === "manage-products" ? <ManageProducts setActivePage={setActivePage} /> :
+        activePage === "manage-orders" ? <ManageOrders setActivePage={setActivePage} /> :
+        activePage === "delivery_partner" ? <DeliveryPartnerDashboard setActivePage={setActivePage} /> :
         null
       }      
     </Container>

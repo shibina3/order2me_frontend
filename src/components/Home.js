@@ -9,6 +9,7 @@ const HomePage = ({setActiveTab, setCategoryId}) => {
   const [cartItems, setCartItems] = useState({});
   const [wishlistItems, setWishlistItems] = useState([]);
   const [isLoading, setLoading] = useState(true);
+  const [details, setDetails] = useState([]);
 
   useEffect(() => {
     async function fetchData() {
@@ -23,7 +24,7 @@ const HomePage = ({setActiveTab, setCategoryId}) => {
       });
       let allItems = await allItemsRes.json();
       allItems = JSON.parse(allItems.body);
-
+      allItems = allItems.filter(cat => cat.location === localStorage.getItem('userCity'))
       const popular_items = allItems.filter(item => item.popular_item);
       const new_arrivals = allItems.filter(item => item.new_arrival);
 
@@ -41,7 +42,7 @@ const HomePage = ({setActiveTab, setCategoryId}) => {
       });
       let allCategories = await allCategoriesRes.json();
       allCategories = JSON.parse(allCategories.body);
-      
+      allCategories = allCategories.filter(cat => cat.location === localStorage.getItem('userCity'))
       allCategories = allCategories.sort((a, b) => a.id - b.id);
 
       setCategories(allCategories);
@@ -62,6 +63,18 @@ const HomePage = ({setActiveTab, setCategoryId}) => {
         return acc;
       }, {});
       setCartItems(cartItemsMap);
+
+      // fetch contact details
+      const contactDetRes = await fetch(`https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({path: "/contact/details"})
+      });
+      let contactDetData = await contactDetRes.json();
+      contactDetData = JSON.parse(contactDetData.body);
+      setDetails(contactDetData);
     }
 
     fetchData();
@@ -266,7 +279,7 @@ const HomePage = ({setActiveTab, setCategoryId}) => {
                         </span>
                     }
                     </Card.Title>
-                    <Card.Text className='d-flex justify-content-between'>{item.description}{renderItemControls(item.id)}</Card.Text>
+                    <Card.Text className='d-flex justify-content-between'>{item.description}{item.stock === 'out-of-stock' ? <div className='m-3 text-danger'><span>Out of stock</span></div> : renderItemControls(item.id)}</Card.Text>
                   </Card.Body>
                 </Card>
               ))
@@ -368,14 +381,14 @@ const HomePage = ({setActiveTab, setCategoryId}) => {
       <footer className="footer text-center my-4">
         <div className="contact-info mb-3">
           <h4>Contact Us</h4>
-          <p>Phone: <a href="tel:+919487981496">+91 94879 81496</a></p>
-          <p>Email: <a href="mailto:contact@order2me.com">contact@order2me.com</a></p>
-          <p>Location: KK Nagar, Trichy</p>
+          <p>Phone: <a href={`tel:${details?.find(det => det.key.trim() === "phone")?.value?.trim()}`}>{details?.find(det => det.key.trim() === "phone")?.value?.trim()}</a></p>
+          <p>Email: <a href={`mailto:${details?.find(det => det.key.trim() === "mail")?.value?.trim()}`}>{details?.find(det => det.key.trim() === "mail")?.value?.trim()}</a></p>
+          <p>Location: {details?.find(det => det.key.trim() === "address")?.value?.trim()}</p>
         </div>
         <div className="social-media mb-3">
-          <a href='https://www.facebook.com/Order2meonline' target='_blank'><FaFacebook className="mx-2" /></a>
-          <a href="https://www.instagram.com/order2me_freshmart/" target='_blank'><FaInstagram className="mx-2" /></a>
-          <a href="https://wa.me/919487981496?text=Hello%20Order2me" target="_blank" rel="noopener noreferrer">
+          <a href={`${details?.find(det => det.key.trim() === "fb-link")?.value?.trim()}`} target='_blank' rel="noreferrer"><FaFacebook className="mx-2" /></a>
+          <a href={`${details?.find(det => det.key.trim() === "insta-link")?.value?.trim()}`} target='_blank' rel="noreferrer"><FaInstagram className="mx-2" /></a>
+          <a href={`${details?.find(det => det.key.trim() === "wp-link")?.value?.trim()}`} target="_blank" rel="noopener noreferrer">
             <FaWhatsapp className="mx-2" />
           </a>
         </div>

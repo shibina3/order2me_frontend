@@ -30,7 +30,7 @@ const PurchaseHistory = () => {
         return 25;
       case 'confirmed':
         return 50;
-      case 'delivery scheduled':
+      case 'delivery_scheduled':
         return 75;
       case 'delivered':
         return 100;
@@ -64,7 +64,10 @@ const PurchaseHistory = () => {
                 </Card.Header>
 
                 <Card.Body>
-                  <Card.Title>Order Summary</Card.Title>
+                  <Card.Title>Order ID: {order.id}</Card.Title>
+                  {
+                    (order.order_status === "delivery_scheduled" && order.otp) ? <Card.Title>OTP: {order.otp}</Card.Title> : <></>
+                  }
                   <ListGroup variant="flush">
                     {order.order_items.map((item) => (
                       <ListGroup.Item key={item.id}>

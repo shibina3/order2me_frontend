@@ -186,7 +186,8 @@ export default function Wishlist() {
                                     ₹{selectedPriceDetail.amount}
                                 </span>
                             </div>
-                            {cartQuantity > 0 ? (
+                            {item.stock === 'out-of-stock' ? <div className='m-3 text-danger'><span>Out of stock</span></div> :
+                            cartQuantity > 0 ? (
                                 <div className="mt-2 cart-controls">
                                     <button className="quantity-btn" onClick={() => handleDecrement(item.id)}>-</button>
                                     <span className="cart-quantity">{cartQuantity}</span>

@@ -26,6 +26,7 @@ const Cart = (props) => {
 
         let storedCart = await cartItemsRes.json();        
         storedCart = JSON.parse(storedCart.body);
+        storedCart = storedCart.filter(cart => cart.stock === "in-stock");
         setCartItems(storedCart);
 
         const calculatedTotal = storedCart.reduce((acc, item) => acc + item.amount * item.quantity, 0);
@@ -51,7 +52,7 @@ const Cart = (props) => {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ quantity, amount: item.amount, user_id: localStorage.getItem('userID'), path: "/put/items", id: item.item_id })
+        body: JSON.stringify({ quantity, amount: item.amount, user_id: localStorage.getItem('userID'), path: "/post/cart", item_id: item.item_id })
       });
 
       const updatedCartItems = [...cartItems];

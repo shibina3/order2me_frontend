@@ -6,13 +6,10 @@ export default function SearchResults() {
     const [items, setItems] = useState([]);
     const [cartItems, setCartItems] = useState({});
     const [wishlistItems, setWishlistItems] = useState([]);
-    const [isLoading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
 
     useEffect(() => {
         async function fetchData() {
-            // Fetch items in the selected category
-            setLoading(true);
             const itemsRes = await fetch(`https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/`, {
                 method: 'POST',
                 headers: {
@@ -22,6 +19,7 @@ export default function SearchResults() {
             });
             let itemsData = await itemsRes.json();
             itemsData = JSON.parse(itemsData.body);
+            itemsData = itemsData.filter(cat => cat.location === localStorage.getItem('userCity'))
 
             // Fetch items in the cart
             const cartRes = await fetch(`https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/`, {
@@ -41,7 +39,6 @@ export default function SearchResults() {
 
             setItems(itemsData);
             setCartItems(cartMap);
-            setLoading(false);
         }
         const fetchWishlist = async() => {
             const allWishlistItemRes = await fetch(`https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/`, {
@@ -226,14 +223,15 @@ export default function SearchResults() {
                                     ₹{selectedPriceDetail.amount}
                                 </span>
                             </div>
-                            {cartQuantity > 0 ? (
+                            {item.stock === 'out-of-stock' ? 
+                            <div className='m-3 text-danger'><span>Out of stock</span></div> :
+                             cartQuantity > 0 ? (
                                 <div className="mt-2 cart-controls">
                                     <button className="quantity-btn" onClick={() => handleDecrement(item.id)}>-</button>
                                     <span className="cart-quantity">{cartQuantity}</span>
                                     <button className="quantity-btn" onClick={() => handleIncrement(item.id)}>+</button>
                                 </div>
-                            ) : (
-                                <button className="mt-2 add-to-cart-btn fs-6" onClick={() => handleAddToCart(item.id)}>
+                            ) : (<button className="mt-2 add-to-cart-btn fs-6" onClick={() => handleAddToCart(item.id)}>
                                     Add +
                                 </button>
                             )}
