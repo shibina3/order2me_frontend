@@ -1090,8 +1090,8 @@ select {
 }
 .side-bar-badge {
   position: relative;
-  top: 2px;
-  right: -5px;
+  top: -10px;
+  right: -13px;
   width: 17px;
   height: 18px;
   background-color: rgb(255 193 7);

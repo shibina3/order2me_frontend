@@ -133,14 +133,14 @@ const AppNavbar = (props) => {
               <Nav.Link onClick={() => {setPage('my_profile');toggleBreadcrumb();}} className="content-primary"><CgProfile className='sidebar-icons' /> My Profile</Nav.Link>
               <Nav.Link onClick={() => {setPage('purchase_history');toggleBreadcrumb();}} className="content-primary"><BsCartCheckFill className='sidebar-icons' />My Orders</Nav.Link>
               <Nav.Link onClick={() => {setPage('wishlist');toggleBreadcrumb();}} className="content-primary"><FaHeart className='sidebar-icons' />My Wishlist</Nav.Link>
-              <Nav.Link onClick={() => {setPage('cart');toggleBreadcrumb();}} className="content-primary"><FaShoppingCart className='sidebar-icons' />Cart<span className="side-bar-badge">{cartItems}</span></Nav.Link>
+              <Nav.Link onClick={() => {setPage('cart');toggleBreadcrumb();}} className="content-primary pb-0"><FaShoppingCart className='sidebar-icons' />Cart<span className="side-bar-badge">{cartItems}</span></Nav.Link>
               {
-                isAdmin ? <Nav.Link onClick={() => {setPage('admin');toggleBreadcrumb();}} className="content-primary"><RiAdminFill className='sidebar-icons' />Admin</Nav.Link> : <></>
+                isAdmin ? <Nav.Link onClick={() => {setPage('admin');toggleBreadcrumb();}} className="content-primary pt-0"><RiAdminFill className='sidebar-icons' />Admin</Nav.Link> : <></>
               }
               {
-                isDeliveryPartner ? <Nav.Link onClick={() => {setPage('delivery_partner');toggleBreadcrumb();}} className="content-primary"><MdDeliveryDining className='sidebar-icons' />Delivery Partner</Nav.Link> : <></>
+                isDeliveryPartner ? <Nav.Link onClick={() => {setPage('delivery_partner');toggleBreadcrumb();}} className="content-primary pt-0"><MdDeliveryDining className='sidebar-icons' />Delivery Partner</Nav.Link> : <></>
               }
-              <Nav.Link onClick={showLogOutPopup} className="content-primary"><IoMdLogOut className='sidebar-icons'  />Logout</Nav.Link>
+              <Nav.Link onClick={showLogOutPopup} className="content-primary pt-0"><IoMdLogOut className='sidebar-icons'  />Logout</Nav.Link>
             </Nav>
           </div>
         </div>
