@@ -271,7 +271,7 @@ export default function Items({ activeTab, categoryId, setCartNumber, cartNumber
                 );
             }): <Alert>No items found</Alert>}
             {
-            appStatus === 'ON' ? <div className="timings-banner-off off-bg footer-banner text-center text-white my-3">
+            appStatus === 'OFF' ? <div className="timings-banner-off off-bg footer-banner text-center text-white my-3">
                 <p>We are not currently accepting any orders!</p></div> : 
             cartNumber > 0 ? <div className="footer-banner text-center my-3 text-white" onClick={() => setActivePage('cart')}>
             Proceed to checkout <FaRegArrowAltCircleRight className='ms-3'/>

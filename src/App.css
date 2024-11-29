@@ -1226,3 +1226,23 @@ select {
   background-color: #e2e2e2 !important;
   border-color: #e2e2e2 !important;
 }
+
+select {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background: #fff url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather feather-chevron-down"><polyline points="7 10 12 14 17 10"></polyline></svg>') no-repeat right 8px center;
+  padding-right: 30px; /* Space for the arrow */
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+select:focus {
+  outline: none;
+  border-color: #888;
+}
+
+option {
+  padding: 10px;
+}
