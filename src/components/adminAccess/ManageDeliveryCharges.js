@@ -126,11 +126,12 @@ const ManageDeliveryCharges = (props) => {
         body: JSON.stringify({ 
           path: "/update/delivery_fee", 
           areaDetails: updatedAreaDetails[area_id],
+          area_id: area_id,
         }), 
       });
       const result = await response.json();
       if (result.message === 'Area details updated') {
-        setAreaDetails(JSON.parse(result.body));
+        setAreaDetails(result.body);
         setAlertMessage('Area updated successfully');
         setAlertType('success');
         setShow(true);

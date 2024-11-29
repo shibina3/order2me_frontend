@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Container, Row, Col, Image, Card, Form, Button } from 'react-bootstrap';
 
 const MyProfile = () => {
@@ -10,7 +10,6 @@ const MyProfile = () => {
     address: localStorage.getItem('address') || ''
   });
 
-  const [isEditing, setIsEditing] = useState(false);
   const [isSaveEnabled, setIsSaveEnabled] = useState(false);
 
   // Handle input change

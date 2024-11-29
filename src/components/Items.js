@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { Alert } from 'react-bootstrap';
-import { FaRegHeart, FaHeart } from "react-icons/fa";
+import { FaRegHeart, FaHeart, FaRegArrowAltCircleRight } from "react-icons/fa";
 
-export default function Items({ activeTab, categoryId }) {
+export default function Items({ activeTab, categoryId, setCartNumber, cartNumber, setActivePage}) {
     const [items, setItems] = useState([]);
     const [cartItems, setCartItems] = useState({});
     const [wishlistItems, setWishlistItems] = useState([]);
-    const [isLoading, setLoading] = useState(true);
+    const [isLoading, setLoading] = useState(true);    
+    const [appStatus, setAppStatus] = useState('ON');
 
     useEffect(() => {
         async function fetchData() {
@@ -56,10 +57,13 @@ export default function Items({ activeTab, categoryId }) {
                 headers: {
                   'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({path: "/get/cart", id: localStorage.getItem('userID') })
+                body: JSON.stringify({path: "/get/cart", userId: localStorage.getItem('userID') })
             });
             let cartData = await cartRes.json();
+            setAppStatus(cartData.app_status);
             cartData = JSON.parse(cartData.body);
+            
+            setCartNumber(cartData.reduce((sum, item) => sum + item.quantity, 0));
             
             const cartMap = cartData.reduce((acc, item) => {
                 acc[item.item_id] = item.quantity;
@@ -71,6 +75,7 @@ export default function Items({ activeTab, categoryId }) {
             setLoading(false);
         }
         fetchData();
+        // eslint-disable-next-line
     }, [categoryId, activeTab]);
 
     useEffect(() => {
@@ -123,8 +128,9 @@ export default function Items({ activeTab, categoryId }) {
             },
             body: JSON.stringify(cartItem)
         });
-
-        setCartItems({ ...cartItems, [itemId]: 1 });
+        let newCartItems = { ...cartItems, [itemId]: 1 };
+        setCartItems(newCartItems);
+        setCartNumber(Object.values(newCartItems).reduce((sum, item) => sum + item, 0));
     };
 
     const handleIncrement = async (itemId) => {
@@ -142,7 +148,9 @@ export default function Items({ activeTab, categoryId }) {
             body: JSON.stringify({ quantity: newQuantity, amount: selectedPriceDetail.amount, user_id: localStorage.getItem('userID'), id: itemId, path: "/put/cart" })
         });
 
-        setCartItems({ ...cartItems, [itemId]: newQuantity });
+        let newCartItems = { ...cartItems, [itemId]: newQuantity };
+        setCartItems(newCartItems);
+        setCartNumber(Object.values(newCartItems).reduce((sum, item) => sum + item, 0));
     };
 
     const handleDecrement = async (itemId) => {
@@ -160,7 +168,9 @@ export default function Items({ activeTab, categoryId }) {
                 },
                 body: JSON.stringify({ path: "/put/cart", quantity: newQuantity, amount: selectedPriceDetail.amount, user_id: localStorage.getItem('userID') })
             });
-            setCartItems({ ...cartItems, [itemId]: newQuantity });
+            let newCartItems = { ...cartItems, [itemId]: newQuantity };
+            setCartItems(newCartItems);
+            setCartNumber(Object.values(newCartItems).reduce((sum, item) => sum + item, 0));
         } else {
             await fetch(`https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/`, {
                 method: 'POST',
@@ -172,6 +182,7 @@ export default function Items({ activeTab, categoryId }) {
             const updatedCartItems = { ...cartItems };
             delete updatedCartItems[itemId];
             setCartItems(updatedCartItems);
+            setCartNumber(Object.values(updatedCartItems).reduce((sum, item) => sum + item, 0));
         }
     };
 
@@ -259,6 +270,13 @@ export default function Items({ activeTab, categoryId }) {
                     </div>
                 );
             }): <Alert>No items found</Alert>}
+            {
+            appStatus === 'ON' ? <div className="timings-banner-off off-bg footer-banner text-center text-white my-3">
+                <p>We are not currently accepting any orders!</p></div> : 
+            cartNumber > 0 ? <div className="footer-banner text-center my-3 text-white" onClick={() => setActivePage('cart')}>
+            Proceed to checkout <FaRegArrowAltCircleRight className='ms-3'/>
+            </div> : null
+            }
         </div>) : (<div className='loader-container'><div className="loader">
         <div></div>
         <div></div>

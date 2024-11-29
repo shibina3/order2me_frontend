@@ -389,6 +389,16 @@ input[type="text"]:focus, input[type="tel"]:focus, .form-control:focus {
   margin-bottom: 20px;
 }
 
+.timings-banner-off {
+  background-color: #fae1cc; /*#fae1cc - Light red background */
+  padding: 10px;
+  margin-bottom: 20px;
+}
+
+.off-bg {
+  background-color: rgb(220 53 69) !important;
+}
+
 .offer-banner img {
   width: 100%;
   height: auto;
@@ -410,7 +420,6 @@ input[type="text"]:focus, input[type="tel"]:focus, .form-control:focus {
 
 .carousel-item {
   flex: 0 0 auto; /* Prevent shrinking */
-  /* width: 18rem; */
   border: 1px solid #d3d3d3;
 }
 
@@ -443,7 +452,9 @@ input[type="text"]:focus, input[type="tel"]:focus, .form-control:focus {
 }
 
 .cardImage {
-  height: 75%;
+  height: 300px;
+  object-fit: cover;
+  width: 100%;
 }
 
 /* General Styling */
@@ -537,7 +548,7 @@ input[type="text"]:focus, input[type="tel"]:focus, .form-control:focus {
 }
 
 .logo-side {
-  height: 40px;
+  height: 30px;
 }
 
 .addremove {
@@ -707,6 +718,7 @@ select {
 
 /* Popup box styling */
 .popup-box {
+  position: absolute;
   background-color: #fff; /* White background for the popup */
   padding: 20px;
   border-radius: 8px; /* Rounded corners */
@@ -1107,4 +1119,110 @@ select {
 .flex-imp {
   display: flex !important;
   align-items: center;
+}
+/* Navbar container */
+.navbar-container {
+  width: 100%;
+  overflow-x: auto;
+  border-bottom: 1px solid #ddd;
+  padding: 10px 0;
+}
+
+/* Scrollable area */
+.scrollable-navbar {
+  display: flex;
+  overflow-x: auto;
+  white-space: nowrap;
+  scrollbar-width: none; /* For Firefox */
+  scrollbar-color: #ccc transparent;
+  padding: 0 10px; /* Adds padding to the scrollable area */
+}
+
+/* Scrollbar styling for Webkit browsers */
+.scrollable-navbar::-webkit-scrollbar {
+  height: 6px;
+}
+
+.scrollable-navbar::-webkit-scrollbar-thumb {
+  background-color: #ccc;
+  border-radius: 10px;
+}
+
+.scrollable-navbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* Individual tabs */
+.nav-tab {
+  display: inline-block;
+  margin: 0 10px; /* Adds spacing between tabs */
+  padding: 8px 16px;
+  text-align: center;
+  color: #555;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  border-radius: 20px; /* Rounded corners for tabs */
+  transition: background-color 0.3s, color 0.3s;
+}
+
+/* Hover and active state */
+.nav-tab:hover {
+  background-color: #f5f5f5;
+  color: #ef7323; /* Hover color */
+}
+
+.nav-tab.active {
+  background-color: #ef7323; /* Active tab background */
+  color: white; /* Active tab text color */
+  font-weight: bold;
+}
+
+@media (max-width: 768px) {
+  /* Adjust spacing for smaller screens */
+  .nav-tab {
+    margin: 0 5px;
+    padding: 6px 12px;
+    font-size: 13px;
+  }
+}
+
+@keyframes riseFromBottom {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+.footer-banner {
+  position: sticky;
+    bottom: 0;
+    background-color: #ef7323;
+    width: 100%;
+    height: 50px;
+    align-items: center;
+    display: flex;
+    justify-content: center;
+    border-top-left-radius: 20px;
+    border-top-right-radius: 20px;
+    animation: riseFromBottom 0.5s ease-out;
+    z-index: 1000;
+}
+
+.form-switch .form-check-input {
+  width: 40px !important;
+  height: 20px !important;
+  cursor: pointer;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='4' fill='rgb(220, 53, 69)'/%3e%3c/svg%3e") !important;
+}
+
+.form-switch .form-check-input:checked {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='4' fill='green'/%3e%3c/svg%3e") !important;
+}
+
+.form-check-input, .form-check-input:checked {
+  background-color: #e2e2e2 !important;
+  border-color: #e2e2e2 !important;
 }

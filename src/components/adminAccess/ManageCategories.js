@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button, ListGroup, Form, InputGroup, Accordion, Alert } from 'react-bootstrap';
 import AWS from 'aws-sdk';
+import { DragDropContext, Draggable, Droppable } from 'react-beautiful-dnd';
 
 const ManageCategories = (props) => {
   const [categories, setCategories] = useState([]);
@@ -37,6 +38,7 @@ const ManageCategories = (props) => {
     });
     let allCategories = await allCategoriesRes.json();
     allCategories = JSON.parse(allCategories.body);
+    allCategories = allCategories.sort((a, b) => a.id - b.id);
 
     const groupedCategories = allCategories.reduce((acc, category) => {
       acc[category.location] = acc[category.location] || [];
@@ -138,6 +140,41 @@ const ManageCategories = (props) => {
     }
   };
 
+  const handleReorderCategories = async (locationKey, reorderedCategories) => {
+
+    const updateOrderRes = await fetch(`https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({order: reorderedCategories, path: "/update/categories_order"}),
+    });
+    let updateOrderData = await updateOrderRes.json();
+    if (updateOrderData.message === "Categories Order Updated") {
+      setCategories((prev) => ({
+        ...prev,
+        [locationKey]: reorderedCategories,
+      }));
+    }
+  }
+
+  const onDragEnd = (result, locationKey) => {
+    if (!result.destination) return; 
+
+    const sourceIndex = result.source.index;
+    const destinationIndex = result.destination.index;
+
+    let reorderedCategories = Array.from(categories[locationKey]);
+    const [movedItem] = reorderedCategories.splice(sourceIndex, 1);
+    reorderedCategories.splice(destinationIndex, 0, movedItem);
+    reorderedCategories = reorderedCategories.map((category, index) => ({
+      ...category,
+      id: index + 1,
+    }));    
+
+    handleReorderCategories(locationKey, reorderedCategories);
+  };
+
   return (
     <>
       <div className="manage-categories">
@@ -213,20 +250,36 @@ const ManageCategories = (props) => {
               <Accordion.Item eventKey={idx} key={locationKey}>
                 <Accordion.Header>{locationKey}</Accordion.Header>
                 <Accordion.Body>
-                  <ListGroup>
-                    {categories[locationKey].map((category) => (
-                      <ListGroup.Item key={category.id} className="d-flex justify-content-between align-items-center">
-                        <div>
-                          <h5>{category.name}</h5>
-                          <p>{category.description}</p>
-                          {category.image_url && <img src={category.image_url} alt={category.name} style={{ width: '100px' }} />}
-                        </div>
-                        <Button variant="danger" onClick={() => handleDeleteCategory(category.id)}>
-                          Delete
-                        </Button>
-                      </ListGroup.Item>
-                    ))}
-                  </ListGroup>
+                <DragDropContext onDragEnd={(result) => onDragEnd(result, locationKey)}>
+                  <Droppable droppableId={locationKey.toString()}>
+                    {(provided) => (
+                      <ListGroup {...provided.droppableProps} ref={provided.innerRef}>
+                        {categories[locationKey].map((category, index) => (
+                          <Draggable key={category.id} draggableId={category.id.toString()} index={index}>
+                            {(provided) => (
+                              <ListGroup.Item
+                                ref={provided.innerRef}
+                                {...provided.draggableProps}
+                                {...provided.dragHandleProps}
+                                className="d-flex justify-content-between align-items-center"
+                              >
+                                <div>
+                                  <h5>{category.name}</h5>
+                                  <p>{category.description}</p>
+                                  {category.image_url && <img src={category.image_url} alt={category.name} style={{ width: '100px' }} />}
+                                </div>
+                                <Button variant="danger" onClick={() => handleDeleteCategory(category.id)}>
+                                  Delete
+                                </Button>
+                              </ListGroup.Item>
+                            )}
+                          </Draggable>
+                        ))}
+                        {provided.placeholder}
+                      </ListGroup>
+                    )}
+                  </Droppable>
+                </DragDropContext>
                 </Accordion.Body>
               </Accordion.Item>
             ))}

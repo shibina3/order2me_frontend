@@ -9,9 +9,10 @@ const Cart = (props) => {
   const [total, setTotal] = useState(0);
   const [showAlert, setShowAlert] = useState(false);
   const [isLoading, setLoading] = useState(true);
+  const [appStatus, setAppStatus] = useState('ON');
 
   useEffect(() => {
-    async function fetchData() {
+    async function fetchData() {      
       setLoading(true);
       try {
         const cartItemsRes = await fetch(`https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/`, {
@@ -24,8 +25,10 @@ const Cart = (props) => {
 
         if (!cartItemsRes.ok) throw new Error("Failed to fetch cart items");
 
-        let storedCart = await cartItemsRes.json();        
+        let storedCart = await cartItemsRes.json();       
+        setAppStatus(storedCart.app_status); 
         storedCart = JSON.parse(storedCart.body);
+        props.setCartNumber(storedCart.reduce((sum, item) => sum + item.quantity, 0));
         storedCart = storedCart.filter(cart => cart.stock === "in-stock");
         setCartItems(storedCart);
 
@@ -39,7 +42,7 @@ const Cart = (props) => {
 
     }
     fetchData();
-  }, []);
+  }, [props]);
 
   const updateQuantity = async (index, quantity) => {
     if (quantity < 1) return;
@@ -52,12 +55,13 @@ const Cart = (props) => {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ quantity, amount: item.amount, user_id: localStorage.getItem('userID'), path: "/post/cart", item_id: item.item_id })
+        body: JSON.stringify({ quantity, amount: item.amount, user_id: localStorage.getItem('userID'), path: "/put/cart", itemId: item.item_id })
       });
 
       const updatedCartItems = [...cartItems];
       updatedCartItems[index].quantity = quantity;
       setCartItems(updatedCartItems);
+      props.setCartNumber(updatedCartItems.reduce((sum, item) => sum + item.quantity, 0));
 
       const newTotal = updatedCartItems.reduce((acc, item) => acc + item.amount * item.quantity, 0);
       setTotal(newTotal);
@@ -75,11 +79,12 @@ const Cart = (props) => {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ user_id: localStorage.getItem('userID'), path: "/delete/items", id: item.item_id })
+        body: JSON.stringify({ user_id: localStorage.getItem('userID'), path: "/delete/cart", id: item.item_id })
       });
 
       const updatedCartItems = cartItems.filter((_, i) => i !== index);
       setCartItems(updatedCartItems);
+      props.setCartNumber(updatedCartItems.reduce((sum, item) => sum + item.quantity, 0));
 
       const newTotal = updatedCartItems.reduce((acc, item) => acc + item.amount * item.quantity, 0);
       setTotal(newTotal);
@@ -163,9 +168,13 @@ const Cart = (props) => {
               <h4>
                 <strong>Total: </strong>₹{total.toFixed(2)}
               </h4>
-              <Button variant="success" className="mt-3 w-100" onClick={handleCheckout}>
-                Proceed to Checkout
-              </Button>
+              {
+                appStatus === 'OFF' ? <div className="timings-banner-off off-bg footer-banner text-center text-white my-3">
+                  <p>We are not currently accepting any orders!</p></div> : 
+                <Button variant="success" className="mt-3 w-100" onClick={handleCheckout}>
+                  Proceed to Checkout
+                </Button>
+              }
             </Col>
           </Row>
         </>

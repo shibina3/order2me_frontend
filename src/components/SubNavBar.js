@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { Nav } from 'react-bootstrap';
 
 const SubNavbar = ({ setActiveTab, activeTab, setCategoryId }) => {
   const [tabs, setTabs] = useState([]);
@@ -25,10 +24,10 @@ const SubNavbar = ({ setActiveTab, activeTab, setCategoryId }) => {
   },[])
 
   return (
-    <Nav className="m-0 d-flex justify-content-center align-items-center border-bottom sub-navbar navbar-height">
-        <Nav.Item className="nav-item">
-        <div 
-          className={`content-primary centered-text custom-nav-link ${activeTab === 'all' ? 'active' : ''}`}
+    <div className="navbar-container">
+      <div className="scrollable-navbar">
+        <div
+          className={`nav-tab ${activeTab === 'all' ? 'active' : ''}`}
           onClick={() => {
             setActiveTab('all');
             setCategoryId(0);
@@ -36,11 +35,10 @@ const SubNavbar = ({ setActiveTab, activeTab, setCategoryId }) => {
         >
           All
         </div>
-      </Nav.Item>
-      {
-        tabs.length ? tabs.map((tab, index) => <Nav.Item key={index} className={`nav-item ${activeTab === tab.name ? 'active' : ''}`}>
-          <div 
-            className={`content-primary centered-text custom-nav-link ${activeTab === tab.name ? 'active' : ''}`}
+        {tabs?.map((tab, index) => (
+          <div
+            key={index}
+            className={`nav-tab ${activeTab === tab.name ? 'active' : ''}`}
             onClick={() => {
               setActiveTab(tab.name);
               setCategoryId(tab.id);
@@ -48,9 +46,9 @@ const SubNavbar = ({ setActiveTab, activeTab, setCategoryId }) => {
           >
             {tab.name}
           </div>
-        </Nav.Item>) : null
-      }
-    </Nav>
+        ))}
+      </div>
+    </div>
   );
 };
 

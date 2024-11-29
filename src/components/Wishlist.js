@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Alert } from 'react-bootstrap';
 import { FaHeart } from "react-icons/fa";
 
-export default function Wishlist() {
+export default function Wishlist({ setCartNumber }) {
     const [cartItems, setCartItems] = useState({});
     const [isLoading, setLoading] = useState(true);
     const [wishlistItems, setWishlistItems] = useState([]);
@@ -17,7 +17,7 @@ export default function Wishlist() {
                 headers: {
                   'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({path: "/get/cart", id: localStorage.getItem('userID') })
+                body: JSON.stringify({path: "/get/cart", userId: localStorage.getItem('userID') })
             });
             let cartData = await cartRes.json();
             cartData = JSON.parse(cartData.body);
@@ -43,10 +43,11 @@ export default function Wishlist() {
             
             setWishlistItems(allWishlistItems);
             setCartItems(cartMap);
+            setCartNumber(Object.values(cartMap).reduce((sum, item) => sum + item, 0));
             setLoading(false);
         }
         fetchData();
-    }, []);
+    }, [setCartNumber]);
 
     const handleQuantityChange = (itemId, event) => {
         const selectedQuantity = event.target.value;
@@ -76,8 +77,9 @@ export default function Wishlist() {
             },
             body: JSON.stringify(cartItem)
         });
-
-        setCartItems({ ...cartItems, [itemId]: 1 });
+        let newCartItems = { ...cartItems, [itemId]: 1 };
+        setCartItems(newCartItems);
+        setCartNumber(Object.values(newCartItems).reduce((sum, item) => sum + item, 0));
     };
 
     const handleIncrement = async (itemId) => {
@@ -94,8 +96,9 @@ export default function Wishlist() {
             },
             body: JSON.stringify({ quantity: newQuantity, amount: selectedPriceDetail.amount, user_id: localStorage.getItem('userID'), id: itemId, path: "/put/cart" })
         });
-
-        setCartItems({ ...cartItems, [itemId]: newQuantity });
+        let newCartItems = { ...cartItems, [itemId]: newQuantity };
+        setCartItems(newCartItems);
+        setCartNumber(Object.values(newCartItems).reduce((sum, item) => sum + item, 0));
     };
 
     const handleDecrement = async (itemId) => {
@@ -113,7 +116,9 @@ export default function Wishlist() {
                 },
                 body: JSON.stringify({ path: "/put/cart", quantity: newQuantity, amount: selectedPriceDetail.amount, user_id: localStorage.getItem('userID') })
             });
-            setCartItems({ ...cartItems, [itemId]: newQuantity });
+            let newCartItems = { ...cartItems, [itemId]: newQuantity };
+            setCartItems(newCartItems);
+            setCartNumber(Object.values(newCartItems).reduce((sum, item) => sum + item, 0));
         } else {
             await fetch(`https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/`, {
                 method: 'POST',
@@ -125,6 +130,7 @@ export default function Wishlist() {
             const updatedCartItems = { ...cartItems };
             delete updatedCartItems[itemId];
             setCartItems(updatedCartItems);
+            setCartNumber(Object.values(updatedCartItems).reduce((sum, item) => sum + item, 0));
         }
     };
 

@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Accordion, Button, Card } from 'react-bootstrap';
+import { Accordion, Button, Card, ListGroup } from 'react-bootstrap';
 
 const ManageOrders = (props) => {
     const [orders, setOrders] = useState(null);
     const [deliveryPartners, setDeliveryPartners] = useState([]);
-    const [selectedPartner, setSelectedPartner] = useState(null);
+    const [selectedPartner, setSelectedPartner] = useState('');
     const [deliveryAssigned, setDeliveryAssigned] = useState([]);
 
     useEffect(() => {
@@ -48,9 +48,7 @@ const ManageOrders = (props) => {
             body: JSON.stringify({ path: "/get/delivers" }),
           });
           let delivers = await allDelivers.json();
-          delivers = JSON.parse(delivers.body);
-          console.log("delivers ",delivers);
-          
+          delivers = JSON.parse(delivers.body);          
           setDeliveryAssigned(delivers);
       };
   const groupOrdersByStatus = (orders) => {
@@ -95,6 +93,7 @@ const ManageOrders = (props) => {
     let nextStatus = status === 'declined' ? status : order_status[order_status.indexOf(status) +1];
     let payload = { path: "/change/order_status", status:nextStatus, order_id };
     if(status === 'confirmed') {
+      if(!selectedPartner.length) { alert('Please select a delivery partner'); return; }
         let randomOTP = Math.floor(100000 + Math.random() * 900000).toString();
         payload["delivery_partner_id"] = selectedPartner;
         payload["otp"] = randomOTP;
@@ -145,6 +144,18 @@ const ManageOrders = (props) => {
                     <Card.Text>Payment Status: {order.payment_status}</Card.Text>
                     <Card.Text>Order Status: {order.order_status}</Card.Text>
                     <Card.Text>Order Date: {new Date(order.created_at).toLocaleString()}</Card.Text>
+                    <Card.Text>Chosen Time Slot: {order.selected_timeslot || 'NA'}</Card.Text>
+                    <ListGroup variant="flush">
+                    {order?.order_items.map((item) => (
+                      <ListGroup.Item key={item.id}>
+                        <div className="d-flex justify-content-between">
+                          <span><img className='purchase_img' src={item.image_url} alt="" />{item.item_name}</span>
+                          <span>Qty: {item.quantity}</span>
+                          <span>Price: ₹{item.price}</span>
+                        </div>
+                      </ListGroup.Item>
+                    ))}
+                  </ListGroup>
                     <Card.Text>
                         <Button variant='success' onClick={()=>{moveStatus('placed', order.id)}}>Confirm</Button>
                         <Button variant='danger' onClick={()=>{moveStatus('declined', order.id)}}>Decline</Button>
@@ -173,6 +184,18 @@ const ManageOrders = (props) => {
                     <Card.Text>Payment Status: {order.payment_status}</Card.Text>
                     <Card.Text>Order Status: {order.order_status}</Card.Text>
                     <Card.Text>Order Date: {new Date(order.created_at).toLocaleString()}</Card.Text>
+                    <Card.Text>Chosen Time Slot: {order.selected_timeslot || 'NA'}</Card.Text>
+                    <ListGroup variant="flush">
+                      {order?.order_items.map((item) => (
+                        <ListGroup.Item key={item.id}>
+                          <div className="d-flex justify-content-between">
+                            <span><img className='purchase_img' src={item.image_url} alt="" />{item.item_name}</span>
+                            <span>Qty: {item.quantity}</span>
+                            <span>Price: ₹{item.price}</span>
+                          </div>
+                        </ListGroup.Item>
+                      ))}
+                    </ListGroup>
                     <Card.Text>
                     <select 
                         id={`delivery-partner-${order.id}`} 
@@ -213,9 +236,21 @@ const ManageOrders = (props) => {
                     <Card.Text>Payment Status: {order.payment_status}</Card.Text>
                     <Card.Text>Order Status: {order.order_status}</Card.Text>
                     <Card.Text>Order Date: {new Date(order.created_at).toLocaleString()}</Card.Text>
-                    <Card.Text>Assined Partner: {deliveryPartners?.find(part => {
+                    <Card.Text>Chosen Time Slot: {order.selected_timeslot || 'NA'}</Card.Text>
+                    <Card.Text>Assigned Partner: {deliveryPartners?.find(part => {
                         return part.id === deliveryAssigned?.find(del => del.order_id === order.id)?.delivery_partner_id
                     })?.username}</Card.Text>
+                    <ListGroup variant="flush">
+                      {order?.order_items.map((item) => (
+                        <ListGroup.Item key={item.id}>
+                          <div className="d-flex justify-content-between">
+                            <span><img className='purchase_img' src={item.image_url} alt="" />{item.item_name}</span>
+                            <span>Qty: {item.quantity}</span>
+                            <span>Price: ₹{item.price}</span>
+                          </div>
+                        </ListGroup.Item>
+                      ))}
+                    </ListGroup>
                     <Card.Text>
                     <Button variant='success' onClick={()=>{moveStatus('delivery_scheduled', order.id)}}>Confirm</Button>
                     <Button variant='danger' onClick={()=>{moveStatus('declined', order.id)}}>Decline</Button>
@@ -244,6 +279,18 @@ const ManageOrders = (props) => {
                     <Card.Text>Payment Status: {order.payment_status}</Card.Text>
                     <Card.Text>Order Status: {order.order_status}</Card.Text>
                     <Card.Text>Order Date: {new Date(order.created_at).toLocaleString()}</Card.Text>
+                    <Card.Text>Chosen Time Slot: {order.selected_timeslot || 'NA'}</Card.Text>
+                    <ListGroup variant="flush">
+                      {order?.order_items.map((item) => (
+                        <ListGroup.Item key={item.id}>
+                          <div className="d-flex justify-content-between">
+                            <span><img className='purchase_img' src={item.image_url} alt="" />{item.item_name}</span>
+                            <span>Qty: {item.quantity}</span>
+                            <span>Price: ₹{item.price}</span>
+                          </div>
+                        </ListGroup.Item>
+                      ))}
+                    </ListGroup>
                   </Card.Body>
                 </Card>
               ))
@@ -268,6 +315,18 @@ const ManageOrders = (props) => {
                     <Card.Text>Payment Status: {order.payment_status}</Card.Text>
                     <Card.Text>Order Status: {order.order_status}</Card.Text>
                     <Card.Text>Order Date: {new Date(order.created_at).toLocaleString()}</Card.Text>
+                    <Card.Text>Chosen Time Slot: {order.selected_timeslot || 'NA'}</Card.Text>
+                    <ListGroup variant="flush">
+                      {order?.order_items.map((item) => (
+                        <ListGroup.Item key={item.id}>
+                          <div className="d-flex justify-content-between">
+                            <span><img className='purchase_img' src={item.image_url} alt="" />{item.item_name}</span>
+                            <span>Qty: {item.quantity}</span>
+                            <span>Price: ₹{item.price}</span>
+                          </div>
+                        </ListGroup.Item>
+                      ))}
+                    </ListGroup>
                   </Card.Body>
                 </Card>
               ))

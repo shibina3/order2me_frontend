@@ -48,6 +48,7 @@ const ManageProducts = (props) => {
       });
       let allCategories = await allCategoriesRes.json();
       allCategories = JSON.parse(allCategories.body);
+      allCategories = allCategories.sort((a, b) => a.id - b.id);
       setCategories(allCategories);
 
       let locRes = await fetch("https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/", {
@@ -204,6 +205,15 @@ const ManageProducts = (props) => {
     }
   };
 
+  const handleAddPriceDetail = (isNewItem) => {
+    const data = isNewItem ? newItemForm : formData;
+    const updatedData = {
+      ...data,
+      price_details: [...data.price_details, { quantity: '', amount: '' }],
+    };
+    isNewItem ? setNewItemForm(updatedData) : setFormData(updatedData);
+  };
+
   const handleImageChange = (e) => {
     setImageFile(e.target.files[0]);
   };
@@ -231,7 +241,7 @@ const ManageProducts = (props) => {
                     onChange={(e) => handleFormChange(e, isNewItem)}
                 >
                     <option value="">Category</option>
-                    {categories.map(cat => (<option key={cat.id} value={cat.name}>{cat.name}</option>))}
+                    {categories.filter(cat => cat.location === data.location).map(cat => (<option key={cat.id} value={cat.name}>{cat.name}</option>))}
                 </Form.Select>
             </Form.Group>
             <Form.Group>
@@ -284,21 +294,32 @@ const ManageProducts = (props) => {
     <Form.Group>
       <Form.Label>Price Details</Form.Label>
       {data.price_details.map((priceDetail, index) => (
-        <div key={index}>
+        <div className='d-flex gap-3' key={index}>
+          <Form.Label>Quantity</Form.Label>
           <Form.Control
             type="text"
             name="quantity"
             value={priceDetail.quantity}
+            label="Quantity"
             onChange={(e) => handlePriceChange(index, 'quantity', e.target.value, isNewItem)}
           />
+          <Form.Label>Price</Form.Label>
           <Form.Control
             type="number"
             name="amount"
+            label="Price"
             value={priceDetail.amount}
             onChange={(e) => handlePriceChange(index, 'amount', e.target.value, isNewItem)}
           />
         </div>
       ))}
+      <Button
+        variant="secondary"
+        onClick={() => handleAddPriceDetail(isNewItem)}
+        className="mt-2"
+      >
+        Add Quantity
+      </Button>
     </Form.Group>
         <Form.Group>
           <Form.Label>Upload Image</Form.Label>
@@ -315,7 +336,7 @@ const ManageProducts = (props) => {
 };
 
 
-  const groupedItems = items.reduce((acc, item) => {
+  const groupedItems = items.reduce((acc, item) => {    
     const location = item.location;
     const category = item.category;
 
@@ -343,6 +364,10 @@ const ManageProducts = (props) => {
       </li>
     </ol>
   </nav>
+  <Button onClick={() => setNewItemForm({ name: '', description: '', price_details: [{ quantity: '', amount: '' }], stock: 'in-stock', popular_item: false, new_arrival: false, category: '', location: '' })}>
+    Add New Item
+  </Button>
+  {newItemForm && renderProductForm(true)}
     <Accordion>
       {Object.keys(groupedItems).map((location) => (
         <Accordion.Item eventKey={location} key={location}>
@@ -353,10 +378,6 @@ const ManageProducts = (props) => {
                 <Accordion.Item eventKey={category} key={category}>
                   <Accordion.Header>{category}</Accordion.Header>
                   <Accordion.Body>
-                  <Button onClick={() => setNewItemForm({ name: '', description: '', price_details: [{ quantity: '', amount: '' }], stock: '', popular_item: false, new_arrival: false, category: '', location: '' })}>
-                    Add New Item
-                  </Button>
-                  {newItemForm && renderProductForm(true)}
                     {groupedItems[location][category].map(item => (
                       <Card key={item.id}>
                         {

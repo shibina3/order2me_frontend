@@ -1,8 +1,8 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { Carousel, Card, Button } from 'react-bootstrap';
-import { FaArrowLeft, FaArrowRight, FaFacebook, FaInstagram, FaWhatsapp, FaRegHeart, FaHeart } from 'react-icons/fa';
+import { FaArrowLeft, FaArrowRight, FaFacebook, FaInstagram, FaWhatsapp, FaRegHeart, FaHeart, FaRegArrowAltCircleRight } from 'react-icons/fa';
 
-const HomePage = ({setActiveTab, setCategoryId}) => {
+const HomePage = ({setActiveTab, setCategoryId, setCartNumber, cartNumber, setActivePage}) => {
   const [popularItems, setPopularItems] = useState([]);
   const [categories, setCategories] = useState([]);
   const [newArrivals, setNewArrivals] = useState([]);
@@ -10,9 +10,10 @@ const HomePage = ({setActiveTab, setCategoryId}) => {
   const [wishlistItems, setWishlistItems] = useState([]);
   const [isLoading, setLoading] = useState(true);
   const [details, setDetails] = useState([]);
+  const [appStatus, setAppStatus] = useState('ON');
 
   useEffect(() => {
-    async function fetchData() {
+    async function fetchData() {      
       // Fetch all items
       const allItemsRes = await fetch("https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/", {
         method: 'POST',
@@ -41,6 +42,7 @@ const HomePage = ({setActiveTab, setCategoryId}) => {
         body: JSON.stringify({path: "/get/categories"})
       });
       let allCategories = await allCategoriesRes.json();
+      setAppStatus(allCategories.app_status);
       allCategories = JSON.parse(allCategories.body);
       allCategories = allCategories.filter(cat => cat.location === localStorage.getItem('userCity'))
       allCategories = allCategories.sort((a, b) => a.id - b.id);
@@ -57,6 +59,7 @@ const HomePage = ({setActiveTab, setCategoryId}) => {
       });
       let cartData = await cartRes.json();
       cartData = JSON.parse(cartData.body);
+      setCartNumber(cartData.reduce((sum, item) => sum + item.quantity, 0));
       
       const cartItemsMap = cartData.reduce((acc, item) => {
         acc[item.item_id] = item.quantity;
@@ -79,7 +82,7 @@ const HomePage = ({setActiveTab, setCategoryId}) => {
 
     fetchData();
     setLoading(false);
-  }, []);
+  }, [setCartNumber]);
 
   useEffect(() => {
     const fetchWishlist = async() => {
@@ -132,8 +135,9 @@ const HomePage = ({setActiveTab, setCategoryId}) => {
         path: "/put/cart"
       })
     });
-
-    setCartItems({ ...cartItems, [itemId]: newQuantity });
+    let newCartItems = { ...cartItems, [itemId]: newQuantity };
+    setCartItems(newCartItems);
+    setCartNumber(Object.values(newCartItems).reduce((sum, item) => sum + item, 0));
   };
 
   const handleDecrement = async (itemId) => {
@@ -157,7 +161,9 @@ const HomePage = ({setActiveTab, setCategoryId}) => {
           path: "/put/cart"
         })
       });
-      setCartItems({ ...cartItems, [itemId]: newQuantity });
+      let newCartItems = { ...cartItems, [itemId]: newQuantity };
+      setCartItems(newCartItems);
+      setCartNumber(Object.values(newCartItems).reduce((sum, item) => sum + item, 0));
     } else {
       await fetch(`https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/`, {
         method: 'POST',
@@ -170,6 +176,7 @@ const HomePage = ({setActiveTab, setCategoryId}) => {
       const updatedCartItems = { ...cartItems };
       delete updatedCartItems[itemId];
       setCartItems(updatedCartItems);
+      setCartNumber(Object.values(updatedCartItems).reduce((sum, item) => sum + item, 0));
     }
   };
 
@@ -192,8 +199,9 @@ const HomePage = ({setActiveTab, setCategoryId}) => {
       },
       body: JSON.stringify(cartItem)
     });
-
-    setCartItems({ ...cartItems, [itemId]: 1 });
+    let newCartItems = { ...cartItems, [itemId]: 1 };
+    setCartItems(newCartItems);
+    setCartNumber(Object.values(newCartItems).reduce((sum, item) => sum + item, 0));
   };
 
   const renderItemControls = (id) => (
@@ -230,14 +238,18 @@ const HomePage = ({setActiveTab, setCategoryId}) => {
     } else {
         setWishlistItems((prev) => prev.filter(wish => wish !== itemId));
     }
-  }
+  }  
 
   return (
     !isLoading ? (<div className="home-page">
       {/* Banner for Available Timings */}
-      <div className="timings-banner text-center my-3">
-        <p>Order Acceptance Timings: Mon-Fri: 9 AM - 8 PM, Sat-Sun: 10 AM - 6 PM</p>
-      </div>
+      {
+        appStatus === 'ON' ? <div className="timings-banner text-center my-3">
+          <p>Order Acceptance Timings: Mon-Fri: 9 AM - 8 PM, Sat-Sun: 10 AM - 6 PM</p>
+        </div> : <div className="timings-banner-off text-center text-danger my-3">
+          <p>We are not currently accepting any orders!</p>
+        </div>
+      }
 
       {/* Banner for Offer Image */}
       <Carousel>
@@ -265,7 +277,7 @@ const HomePage = ({setActiveTab, setCategoryId}) => {
           <div className="carousel-content" ref={popularRef}>
             {popularItems.length ? (
               popularItems.map((item, index) => (
-                <Card key={index} style={{ width: '18rem', marginRight: '15px' }} className="d-inline-block carousel-item">
+                <Card key={index} style={{ width: '18rem', marginRight: '15px', height: '80%' }} className="d-inline-block carousel-item">
                   <Card.Img variant="top" className="cardImage" src={item.image_url} />
                   <Card.Body>
                     <Card.Title>{item.name}
@@ -397,6 +409,13 @@ const HomePage = ({setActiveTab, setCategoryId}) => {
           <p>Contact <span className='content-primary'>shibinashibi1507@gmail.com</span></p>
         </div>
       </footer>
+      {
+        appStatus === 'OFF' ? <div className="timings-banner-off off-bg footer-banner text-center text-white my-3">
+          <p>We are not currently accepting any orders!</p></div> : 
+        cartNumber > 0 ? <div className="footer-banner text-center my-3 text-white" onClick={() => setActivePage('cart')}>
+        Proceed to checkout <FaRegArrowAltCircleRight className='ms-3'/>
+      </div> : null
+      }
     </div>) : (<div className='loader-container'><div className="loader">
         <div></div>
         <div></div>

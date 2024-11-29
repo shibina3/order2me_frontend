@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Accordion, Button, Card, Form } from 'react-bootstrap';
+import { Accordion, Button, Card, Form, ListGroup } from 'react-bootstrap';
 
 const DeliveryPartnerDashboard = (props) => {
     const [orders, setOrders] = useState(null);
@@ -7,65 +7,69 @@ const DeliveryPartnerDashboard = (props) => {
     const [otp, setOtp] = useState(''); 
     const [otpError, setOtpError] = useState(''); 
     const myID = localStorage.getItem('userID');
-
-    useEffect(() => {
-        fetchOrders();
-      }, []);
     
-      const fetchOrders = async () => {
-        const allOrdersRes = await fetch("https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/", {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-          },
-          body: JSON.stringify({ path: "/get/orders" }),
-        });
-        let allOrders = await allOrdersRes.json();
-        allOrders = JSON.parse(allOrders.body);
-        allOrders = allOrders.sort((a, b) => a.id - b.id);
-        setOrders(allOrders);
-
-        const allDelivers = await fetch("https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/", {
+// eslint-disable-next-line
+      useEffect(() => {
+        const fetchOrders = async () => {
+          const allOrdersRes = await fetch("https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/", {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
               'Accept': 'application/json',
             },
-            body: JSON.stringify({ path: "/get/delivers" }),
+            body: JSON.stringify({ path: "/get/orders" }),
           });
-          let delivers = await allDelivers.json();
-          delivers = JSON.parse(delivers.body);
-          delivers = delivers.filter(del => del.delivery_partner_id == myID);
-          
-          setDeliveries(delivers);
+          let allOrders = await allOrdersRes.json();
+          allOrders = JSON.parse(allOrders.body);
+          allOrders = allOrders.sort((a, b) => a.id - b.id);
+          setOrders(allOrders);
+  
+          const allDelivers = await fetch("https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/", {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+              },
+              body: JSON.stringify({ path: "/get/delivers" }),
+            });
+            let delivers = await allDelivers.json();
+            delivers = JSON.parse(delivers.body);
+            // eslint-disable-next-line
+            delivers = delivers.filter(del => del.delivery_partner_id == myID);
+            
+            setDeliveries(delivers);
+        };
+        fetchOrders();
+        // eslint-disable-next-line
+      }, []);
+
+      const groupOrdersByStatus = (orders) => {
+        const grouped = {
+          delivery_scheduled: [],
+          delivered: []
+        };
+
+        orders?.forEach(order => {
+          // eslint-disable-next-line
+          let myDeliveries = deliveries.filter(del => (del.order_id === order.id && del.delivery_partner_id == myID));
+          switch (order.order_status) {
+            case 'delivery_scheduled':
+                if(myDeliveries.length) {
+                    grouped.delivery_scheduled.push(order);
+                }
+                break;
+            case 'delivered':
+                if(myDeliveries.length) {
+                    grouped.delivered.push(order);
+                }
+              break;
+            default:
+              break;
+          }
+        });
+
+        return grouped;
       };
-  const groupOrdersByStatus = (orders) => {
-    const grouped = {
-      delivery_scheduled: [],
-      delivered: []
-    };
-
-    orders?.forEach(order => {
-      let myDeliveries = deliveries.filter(del => (del.order_id === order.id && del.delivery_partner_id == myID));
-      switch (order.order_status) {
-        case 'delivery_scheduled':
-            if(myDeliveries.length) {
-                grouped.delivery_scheduled.push(order);
-            }
-            break;
-        case 'delivered':
-            if(myDeliveries.length) {
-                grouped.delivered.push(order);
-            }
-          break;
-        default:
-          break;
-      }
-    });
-
-    return grouped;
-  };
 
   const groupedOrders = groupOrdersByStatus(orders);
 
@@ -147,7 +151,19 @@ const DeliveryPartnerDashboard = (props) => {
                     <Card.Text>Payment Status: {order.payment_status}</Card.Text>
                     <Card.Text>Order Status: {order.order_status}</Card.Text>
                     <Card.Text>Order Date: {new Date(order.created_at).toLocaleString()}</Card.Text>
-                    <Card.Text>Assined Partner: {localStorage.getItem('name')}</Card.Text>
+                    <Card.Text>Chosen Time Slot: {order.selected_timeslot || 'NA'}</Card.Text>
+                    <Card.Text>Assigned Partner: {localStorage.getItem('name')}</Card.Text>
+                    <ListGroup variant="flush">
+                      {order?.order_items.map((item) => (
+                        <ListGroup.Item key={item.id}>
+                          <div className="d-flex justify-content-between">
+                            <span><img className='purchase_img' src={item.image_url} alt="" />{item.item_name}</span>
+                            <span>Qty: {item.quantity}</span>
+                            <span>Price: ₹{item.price}</span>
+                          </div>
+                        </ListGroup.Item>
+                      ))}
+                    </ListGroup>
                     <Card.Text>
                         <Form.Group controlId="otpInput">
                             <Form.Label>Enter OTP</Form.Label>
@@ -186,6 +202,18 @@ const DeliveryPartnerDashboard = (props) => {
                     <Card.Text>Payment Status: {order.payment_status}</Card.Text>
                     <Card.Text>Order Status: {order.order_status}</Card.Text>
                     <Card.Text>Order Date: {new Date(order.created_at).toLocaleString()}</Card.Text>
+                    <Card.Text>Chosen Time Slot: {order.selected_timeslot || 'NA'}</Card.Text>
+                    <ListGroup variant="flush">
+                      {order?.order_items.map((item) => (
+                        <ListGroup.Item key={item.id}>
+                          <div className="d-flex justify-content-between">
+                            <span><img className='purchase_img' src={item.image_url} alt="" />{item.item_name}</span>
+                            <span>Qty: {item.quantity}</span>
+                            <span>Price: ₹{item.price}</span>
+                          </div>
+                        </ListGroup.Item>
+                      ))}
+                    </ListGroup>
                   </Card.Body>
                 </Card>
               ))

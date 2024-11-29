@@ -46,10 +46,10 @@ const PurchaseHistory = () => {
   return (
     !isLoading ? (<Container>
       <h3 className="mb-4 text-center content-primary">My Orders</h3>
-      <Row className="justify-content-center">
+      <Row className="justify-content-center" xs={1}>
         {purchases.length > 0 ? (
-          purchases.map((order, index) => (
-            <Col xs={12} md={6} lg={4} key={index} className="mb-4">
+          purchases.sort((a,b) => b.id - a.id).map((order, index) => (
+            <Col key={index} className="mb-4">
               <Card key={order.id} className="mb-4">
                 <Card.Header>
                   <div className="d-flex justify-content-between align-items-center">
@@ -72,7 +72,7 @@ const PurchaseHistory = () => {
                     {order.order_items.map((item) => (
                       <ListGroup.Item key={item.id}>
                         <div className="d-flex justify-content-between">
-                          <span><img className='purchase_img' src={item.image_url} />{item.item_name}</span>
+                          <span><img className='purchase_img' src={item.image_url} alt="" />{item.item_name}</span>
                           <span>Qty: {item.quantity}</span>
                           <span>Price: ₹{item.price}</span>
                         </div>
@@ -82,46 +82,38 @@ const PurchaseHistory = () => {
                 </Card.Body>
 
                 <Card.Footer>
-                  {/* <div className="order-status-progress">
-                    <div className="progress-dots d-flex justify-content-between">
-                      <div>
-                        <div className={`dot ${getProgress(order.order_status) >= 25 ? 'completed' : ''}`}></div>
-                        <span>Placed</span>
-                      </div>
-                      <div className={`dot ${getProgress(order.order_status) >= 50 ? 'completed' : ''}`}>Confirmed</div>
-                      <div className={`dot ${getProgress(order.order_status) >= 75 ? 'completed' : ''}`}>Delivery Scheduled</div>
-                      <div className={`dot ${getProgress(order.order_status) === 100 ? 'completed' : ''}`}>Delivered</div>
-                    </div>
-                  </div> */}
+                {
+                  order.order_status.toLowerCase() === 'declined' ? <div style={{backgroundColor: '#cb3a3a'}} className='d-flex justify-content-center align-items-center text-white'><span>Order Declined. Please contact {order.contact_admin}</span></div> : 
                   <div className="order-status-progress">
                     <div className="progress-dots d-flex justify-content-between">
-                      {/* Progress bar */}
-                      <div className="progress-bar">
-                        <div
-                          className="progress-fill"
-                          style={{ width: `${getProgress(order.order_status)}%` }}
-                        ></div>
-                      </div>
+                    {/* Progress bar */}
+                    <div className="progress-bar">
+                      <div
+                        className="progress-fill"
+                        style={{ width: `${getProgress(order.order_status)}%` }}
+                      ></div>
+                    </div>
 
-                      {/* Dots */}
-                      <div className='progress-bar-cont'>
-                        <div className={`dot ${getProgress(order.order_status) >= 25 ? 'completed' : ''}`}></div>
-                        <span className='order-status'>Placed</span>
-                      </div>
-                      <div className='progress-bar-cont'>
-                        <div className={`dot ${getProgress(order.order_status) >= 50 ? 'completed' : ''}`}></div>
-                        <span className='order-status'>Confirmed</span>
-                      </div>
-                      <div className='progress-bar-cont'>
-                        <div className={`dot ${getProgress(order.order_status) >= 75 ? 'completed' : ''}`}></div>
-                        <span className='order-status'>Delivery Scheduled</span>
-                      </div>
-                      <div className='progress-bar-cont'>
-                        <div className={`dot ${getProgress(order.order_status) === 100 ? 'completed' : ''}`}></div>
-                        <span className='order-status'>Delivered</span>
-                      </div>
+                    {/* Dots */}
+                    <div className='progress-bar-cont'>
+                      <div className={`dot ${getProgress(order.order_status) >= 25 ? 'completed' : ''}`}></div>
+                      <span className='order-status'>Placed</span>
+                    </div>
+                    <div className='progress-bar-cont'>
+                      <div className={`dot ${getProgress(order.order_status) >= 50 ? 'completed' : ''}`}></div>
+                      <span className='order-status'>Confirmed</span>
+                    </div>
+                    <div className='progress-bar-cont'>
+                      <div className={`dot ${getProgress(order.order_status) >= 75 ? 'completed' : ''}`}></div>
+                      <span className='order-status'>Delivery Scheduled</span>
+                    </div>
+                    <div className='progress-bar-cont'>
+                      <div className={`dot ${getProgress(order.order_status) === 100 ? 'completed' : ''}`}></div>
+                      <span className='order-status'>Delivered</span>
+                    </div>
                     </div>
                   </div>
+                }
                 </Card.Footer>
               </Card>
             </Col>

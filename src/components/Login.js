@@ -92,7 +92,9 @@ const Login = (props) => {
                 <Button variant="danger" type="submit" className="w-100 mt-4">
                   Login
                 </Button>
+                {/* eslint-disable-next-line */}
                 <a className="d-block content-primary text-center mt-3">Forgot password?</a>
+                {/* eslint-disable-next-line */}
                 <a onClick={()=>setIsLogin(!isLogin)} className="d-block content-primary text-center mt-3">Don't have an account? Register</a>
               </Form> :
               <Form onSubmit={handleRegisterSubmit}>
