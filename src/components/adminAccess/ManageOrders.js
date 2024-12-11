@@ -149,7 +149,7 @@ const ManageOrders = (props) => {
                     {order?.order_items.map((item) => (
                       <ListGroup.Item key={item.id}>
                         <div className="d-flex justify-content-between">
-                          <span><img className='purchase_img' src={item.image_url} alt="" />{item.item_name}</span>
+                          <span><img className='purchase_img' src={item.image_url} alt="" />{item.item_name} ({item.product_quantity})</span>
                           <span>Qty: {item.quantity}</span>
                           <span>Price: ₹{item.price}</span>
                         </div>
@@ -189,7 +189,7 @@ const ManageOrders = (props) => {
                       {order?.order_items.map((item) => (
                         <ListGroup.Item key={item.id}>
                           <div className="d-flex justify-content-between">
-                            <span><img className='purchase_img' src={item.image_url} alt="" />{item.item_name}</span>
+                            <span><img className='purchase_img' src={item.image_url} alt="" />{item.item_name} ({item.product_quantity})</span>
                             <span>Qty: {item.quantity}</span>
                             <span>Price: ₹{item.price}</span>
                           </div>
@@ -244,7 +244,7 @@ const ManageOrders = (props) => {
                       {order?.order_items.map((item) => (
                         <ListGroup.Item key={item.id}>
                           <div className="d-flex justify-content-between">
-                            <span><img className='purchase_img' src={item.image_url} alt="" />{item.item_name}</span>
+                            <span><img className='purchase_img' src={item.image_url} alt="" />{item.item_name} ({item.product_quantity})</span>
                             <span>Qty: {item.quantity}</span>
                             <span>Price: ₹{item.price}</span>
                           </div>
@@ -284,7 +284,7 @@ const ManageOrders = (props) => {
                       {order?.order_items.map((item) => (
                         <ListGroup.Item key={item.id}>
                           <div className="d-flex justify-content-between">
-                            <span><img className='purchase_img' src={item.image_url} alt="" />{item.item_name}</span>
+                            <span><img className='purchase_img' src={item.image_url} alt="" />{item.item_name} ({item.product_quantity})</span>
                             <span>Qty: {item.quantity}</span>
                             <span>Price: ₹{item.price}</span>
                           </div>
@@ -320,7 +320,7 @@ const ManageOrders = (props) => {
                       {order?.order_items.map((item) => (
                         <ListGroup.Item key={item.id}>
                           <div className="d-flex justify-content-between">
-                            <span><img className='purchase_img' src={item.image_url} alt="" />{item.item_name}</span>
+                            <span><img className='purchase_img' src={item.image_url} alt="" />{item.item_name} ({item.product_quantity})</span>
                             <span>Qty: {item.quantity}</span>
                             <span>Price: ₹{item.price}</span>
                           </div>

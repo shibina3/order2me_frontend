@@ -1246,3 +1246,25 @@ select:focus {
 option {
   padding: 10px;
 }
+
+.fs-12 {
+  font-size: 12px !important;
+}
+
+.carousel-item-name {
+  font-size: 16px;
+  width: 75%;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+  display: inline-block;
+}
+
+.carousel-item-desc {
+  font-size: 14px;
+  width: 100%;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+  display: inline-block;
+}

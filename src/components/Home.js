@@ -120,6 +120,7 @@ const HomePage = ({setActiveTab, setCategoryId, setCartNumber, cartNumber, setAc
     const newQuantity = currentQuantity + 1;
 
     const item = [...popularItems, ...newArrivals].find(item => item.id === itemId);
+    item.selectedQuantity = item.selectedQuantity || item.price_details[0].quantity;
     const selectedPriceDetail = item.price_details.find(detail => detail.quantity === item.selectedQuantity) || item.price_details[0];
 
     await fetch(`https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/`, {
@@ -131,6 +132,7 @@ const HomePage = ({setActiveTab, setCategoryId, setCartNumber, cartNumber, setAc
         quantity: newQuantity,
         amount: selectedPriceDetail.amount,
         user_id: localStorage.getItem('userID'),
+        product_quantity: item.selectedQuantity,
         itemId: itemId,
         path: "/put/cart"
       })
@@ -145,6 +147,7 @@ const HomePage = ({setActiveTab, setCategoryId, setCartNumber, cartNumber, setAc
     const newQuantity = currentQuantity - 1;
 
     const item = [...popularItems, ...newArrivals].find(item => item.id === itemId);
+    item.selectedQuantity = item.selectedQuantity || item.price_details[0].quantity;
     const selectedPriceDetail = item.price_details.find(detail => detail.quantity === item.selectedQuantity) || item.price_details[0];
 
     if (newQuantity > 0) {
@@ -157,6 +160,7 @@ const HomePage = ({setActiveTab, setCategoryId, setCartNumber, cartNumber, setAc
           quantity: newQuantity,
           amount: selectedPriceDetail.amount,
           user_id: localStorage.getItem('userID'),
+          product_quantity: item.selectedQuantity,
           itemId: itemId,
           path: "/put/cart"
         })
@@ -182,6 +186,8 @@ const HomePage = ({setActiveTab, setCategoryId, setCartNumber, cartNumber, setAc
 
   const handleAddToCart = async (itemId) => {
     const item = [...popularItems, ...newArrivals].find(item => item.id === itemId);
+    item.selectedQuantity = item.selectedQuantity || item.price_details[0].quantity;
+    
     const selectedPriceDetail = item.price_details.find(detail => detail.quantity === item.selectedQuantity) || item.price_details[0];
 
     const cartItem = {
@@ -189,8 +195,9 @@ const HomePage = ({setActiveTab, setCategoryId, setCartNumber, cartNumber, setAc
       item_id: itemId,
       quantity: 1,
       amount: selectedPriceDetail.amount,
+      product_quantity: item.selectedQuantity,
       path: "/post/cart"
-    };
+    };    
 
     await fetch(`https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/`, {
       method: 'POST',
@@ -280,7 +287,7 @@ const HomePage = ({setActiveTab, setCategoryId, setCartNumber, cartNumber, setAc
                 <Card key={index} style={{ width: '18rem', marginRight: '15px', height: '80%' }} className="d-inline-block carousel-item">
                   <Card.Img variant="top" className="cardImage" src={item.image_url} />
                   <Card.Body>
-                    <Card.Title>{item.name}
+                    <Card.Title><span className='carousel-item-name'>{item.name}</span>
                     {
                         wishlistItems.includes(item.id) ? 
                         <span className='items-wishlist wishlisted'>
@@ -291,7 +298,7 @@ const HomePage = ({setActiveTab, setCategoryId, setCartNumber, cartNumber, setAc
                         </span>
                     }
                     </Card.Title>
-                    <Card.Text className='d-flex justify-content-between'>{item.description}{item.stock === 'out-of-stock' ? <div className='m-3 text-danger'><span>Out of stock</span></div> : renderItemControls(item.id)}</Card.Text>
+                    <Card.Text className='d-flex justify-content-between carousel-item-desc'>₹ {item.price_details[0].amount} ({item.price_details[0].quantity}){item.stock === 'out-of-stock' ? <div className='m-3 text-danger'><span>Out of stock</span></div> : renderItemControls(item.id)}</Card.Text>
                   </Card.Body>
                 </Card>
               ))
@@ -364,7 +371,7 @@ const HomePage = ({setActiveTab, setCategoryId, setCartNumber, cartNumber, setAc
                 <Card key={index} style={{ width: '18rem', marginRight: '15px' }} className="d-inline-block carousel-item">
                   <Card.Img variant="top" className="cardImage" src={item.image_url} />
                   <Card.Body>
-                    <Card.Title>{item.name}
+                    <Card.Title><span className='carousel-item-name'>{item.name}</span>
                     {
                         wishlistItems.includes(item.id) ? 
                         <span className='items-wishlist wishlisted'>
@@ -375,7 +382,7 @@ const HomePage = ({setActiveTab, setCategoryId, setCartNumber, cartNumber, setAc
                         </span>
                     }
                     </Card.Title>
-                    <Card.Text className='d-flex justify-content-between'>{item.description}{renderItemControls(item.id)}</Card.Text>
+                    <Card.Text className='d-flex justify-content-between carousel-item-desc'>₹ {item.price_details[0].amount} ({item.price_details[0].quantity}){renderItemControls(item.id)}</Card.Text>
                   </Card.Body>
                 </Card>
               ))

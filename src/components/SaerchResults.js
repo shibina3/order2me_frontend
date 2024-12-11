@@ -81,6 +81,7 @@ export default function SearchResults({setCartNumber}) {
             item_id: itemId,
             quantity: 1, 
             amount: selectedPriceDetail.amount,
+            product_quantity: item.selectedQuantity,
             path: "/post/cart"
         };
 
@@ -108,7 +109,14 @@ export default function SearchResults({setCartNumber}) {
             headers: {
               'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ quantity: newQuantity, amount: selectedPriceDetail.amount, user_id: localStorage.getItem('userID'), id: itemId, path: "/put/cart" })
+            body: JSON.stringify({ 
+                quantity: newQuantity, 
+                amount: selectedPriceDetail.amount, 
+                user_id: localStorage.getItem('userID'), 
+                product_quantity: item.selectedQuantity,
+                id: itemId, 
+                path: "/put/cart" 
+            })
         });
         let newCartItems = { ...cartItems, [itemId]: newQuantity };
         setCartItems(newCartItems);
@@ -128,7 +136,13 @@ export default function SearchResults({setCartNumber}) {
                 headers: {
                   'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ path: "/put/cart", quantity: newQuantity, amount: selectedPriceDetail.amount, user_id: localStorage.getItem('userID') })
+                body: JSON.stringify({ 
+                    path: "/put/cart", 
+                    quantity: newQuantity, 
+                    amount: selectedPriceDetail.amount, 
+                    product_quantity: item.selectedQuantity,
+                    user_id: localStorage.getItem('userID') 
+                })
             });
             let newCartItems = { ...cartItems, [itemId]: newQuantity };
             setCartItems(newCartItems);

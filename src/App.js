@@ -135,7 +135,7 @@ function App() {
         activePage === "my_profile" ? <MyProfile /> :
         activePage === "purchase_history" ? <PurchaseHistory /> :
         activePage === "cart" ? <Cart setActivePage={setActivePage} setCartNumber={setCartNumber} /> :
-        activePage === "checkout" ? <Checkout setActivePage={setActivePage} city={city} /> :
+        activePage === "checkout" ? <Checkout setActivePage={setActivePage} city={city} setCartNumber={setCartNumber} /> :
         activePage === "login" ? <Login setActivePage={setActivePage} /> :
         activePage === "order_placed" ? <OrderPlaced setActivePage={setActivePage} /> :
         activePage === "wishlist" ? <Wishlist setCartNumber={setCartNumber} /> :

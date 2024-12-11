@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-const Checkout = ({ setActivePage, city }) => {
+const Checkout = ({ setActivePage, city, setCartNumber }) => {
   const [address, setAddress] = useState(localStorage.getItem('address') || '');
   const [phoneNumber, setPhoneNumber] = useState(localStorage.getItem('mobile') || '');
   const [paymentMethod, setPaymentMethod] = useState('');
@@ -11,6 +11,9 @@ const Checkout = ({ setActivePage, city }) => {
   const [totalAmount, setTotalAmount] = useState(0);
   const [timeSlots, setTimeSlots] = useState([]);
   const [selectedTimeSlot, setSelectedTimeSlot] = useState('');
+  const [buildingNo, setBuildingNo] = useState('');
+  const [addrLine1, setAddrLine1] = useState('');
+  const [addrLine2, setAddrLine2] = useState('');
 
   useEffect(() => {
     async function fetchItems() {
@@ -54,7 +57,24 @@ const Checkout = ({ setActivePage, city }) => {
     fetchItems();
   }, [city]);
 
-  const handleAddressChange = (e) => setAddress(e.target.value);
+  const handleBuildingNoChange = (e) => {
+    const value = e.target.value;
+    setBuildingNo(value);
+    setAddress(`${value}, ${addrLine1}, ${addrLine2}`);
+  }
+
+  const handleAddrLine1Change = (e) => {
+    const value = e.target.value;
+    setAddrLine1(value);
+    setAddress(`${buildingNo}, ${value}, ${addrLine2}`);
+  }
+
+  const handleAddrLine2Change = (e) => {
+    const value = e.target.value;
+    setAddrLine2(value);
+    setAddress(`${buildingNo}, ${addrLine1}, ${value}`);
+  }
+
   const handlePhoneChange = (e) => setPhoneNumber(e.target.value);
 
   const saveAddress = () => {
@@ -89,6 +109,7 @@ const Checkout = ({ setActivePage, city }) => {
     placeOrder = JSON.parse(placeOrder.body);
 
     if (placeOrder?.message) {
+      setCartNumber(0);
       setActivePage('order_placed');
     }
   };
@@ -110,7 +131,7 @@ const Checkout = ({ setActivePage, city }) => {
         {items.length > 0 ? (
           items.map((item, index) => (
             <div key={index} className="d-flex justify-content-between">
-              <span>{item.name} (x{item.quantity})</span>
+              <span>{item.name} ({item.price_quantity} x{item.quantity})</span>
               <span>₹{parseInt(item.amount) * parseInt(item.quantity)}</span>
             </div>
           ))
@@ -124,13 +145,27 @@ const Checkout = ({ setActivePage, city }) => {
         <h4>Shipping Address</h4>
         {isEditing ? (
           <div>
-            <input 
-              type="text" 
-              className="form-control mb-2" 
-              value={address} 
-              onChange={handleAddressChange} 
-              placeholder="Enter your address" 
-            />
+              <input 
+                type="text" 
+                className="form-control mb-2" 
+                value={buildingNo} 
+                onChange={handleBuildingNoChange} 
+                placeholder="Building No/Flat No" 
+              />
+              <input 
+                type="text" 
+                className="form-control mb-2" 
+                value={addrLine1} 
+                onChange={handleAddrLine1Change} 
+                placeholder="Address line 1" 
+              />
+              <input 
+                type="text" 
+                className="form-control mb-2" 
+                value={addrLine2} 
+                onChange={handleAddrLine2Change} 
+                placeholder="Address line 2" 
+              />
             <button className="checkout-details" onClick={saveAddress}>
               Save Address
             </button>
@@ -150,11 +185,11 @@ const Checkout = ({ setActivePage, city }) => {
         <h4>Choose Area</h4>
         <label className='text-danger'>Select your area:</label>
         <select className='ms-2' onChange={handleDelChange}>
-          <option value={''}></option>
           {
             allDeliveryFee.length ? allDeliveryFee?.map((area, index) => (
               <option key={index} value={area.area_name}>{area.area_name}</option>
             )) : null
+
           }
         </select>
       </div>
@@ -162,25 +197,60 @@ const Checkout = ({ setActivePage, city }) => {
       {/* Choose Time Slot */}
       <div className="area-section mb-5">
         <h4>Choose Time Slot</h4>
-        <label className='text-danger'>Book your time slot:</label>
+        <label className='text-danger'>Book your slot:</label>
         <select className='ms-2' onChange={(e) => setSelectedTimeSlot(e.target.value)}>
-          <option value={''}></option>
           {
-            timeSlots.length ? timeSlots?.filter(slot => {
+            timeSlots.length ? (() => {
               let date = new Date();
               let hours = date.getHours();
               let minutes = date.getMinutes();
               let currentTime = hours * 60 + minutes;
-              let fromTime = slot.from_time.split(':');
-              let from = parseInt(fromTime[0]) * 60 + parseInt(fromTime[1]);
-              return currentTime < from;
-            }).sort((a, b) => a.from_time.localeCompare(b.from_time)).map((slot, index) => {
-              let fromTime = slot.from_time.split(':');
-              let toTime = slot.to_time.split(':');
-              let from = fromTime[0] < 12 ? `${fromTime[0]}:${fromTime[1]} AM` : fromTime[0] = 12 ? `${fromTime[0]}:${fromTime[1]} PM` : `${fromTime[0] - 12}:${fromTime[1]} PM`;
-              let to = toTime[0] < 12 ? `${toTime[0]}:${toTime[1]} AM` : toTime[0] = 12 ? `${toTime[0]}:${toTime[1]} PM` : `${toTime[0] - 12}:${toTime[1]} PM`;
-              return <option key={index} value={`${from} - ${to}`}>{`${from} - ${to}`}</option>
-            }) : null
+          
+              // Calculate 1 hour ahead of the current time
+              let oneHourAhead = currentTime + 60;
+          
+              // Today's slots: Filter out finished slots and slots within the next hour
+              let todaySlots = timeSlots.filter(slot => {
+                  let fromTime = slot.from_time.split(':');
+                  let from = parseInt(fromTime[0]) * 60 + parseInt(fromTime[1]);
+                  return from > oneHourAhead; // Only show slots at least 1 hour ahead
+              });
+          
+              // Tomorrow's slots: All slots remain
+              let tomorrowSlots = timeSlots;
+          
+              // Add a flag for day labels
+              const combinedSlots = [
+                  ...todaySlots.map(slot => ({ ...slot, dayPrefix: "Today" })),
+                  ...tomorrowSlots.map(slot => ({ ...slot, dayPrefix: "Tomorrow" }))
+              ];
+          
+              return combinedSlots
+                  .sort((a, b) => a.dayPrefix.localeCompare(b.dayPrefix) || a.from_time.localeCompare(b.from_time))
+                  .map((slot, index) => {
+                      let fromTime = slot.from_time.split(':');
+                      let toTime = slot.to_time.split(':');
+          
+                      let from = fromTime[0] < 12 
+                          ? `${fromTime[0]}:${fromTime[1]} AM` 
+                          : fromTime[0] == 12 
+                          ? `${fromTime[0]}:${fromTime[1]} PM` 
+                          : `${fromTime[0] - 12}:${fromTime[1]} PM`;
+          
+                      let to = toTime[0] < 12 
+                          ? `${toTime[0]}:${toTime[1]} AM` 
+                          : toTime[0] == 12 
+                          ? `${toTime[0]}:${toTime[1]} PM` 
+                          : `${toTime[0] - 12}:${toTime[1]} PM`;
+          
+                      return (
+                          <option className='fs-12' key={index} value={`${slot.dayPrefix} ${from} - ${to}`}>
+                              {`${slot.dayPrefix}: ${from} - ${to}`}
+                          </option>
+                      );
+                  });
+          })()                
+           : null
           }
         </select>
       </div>

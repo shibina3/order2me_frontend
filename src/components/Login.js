@@ -63,7 +63,9 @@ const Login = (props) => {
     <>
       <div className="login-page d-flex justify-content-center align-items-center">
         <Card className="login-card p-4 shadow-lg">
-          <h3 className="text-center mb-4 content-primary"><img src="/assets/logo-side.png" alt="Order2me" /></h3>
+          <h3 className="text-center mb-4 content-primary">
+            <img className='w-50' src="/assets/navtranslogo-removebg-preview.png" alt="Order2me" />
+          </h3>
           {
             isLogin ?
               <Form onSubmit={handleLoginSubmit}>

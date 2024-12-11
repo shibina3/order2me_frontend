@@ -47,7 +47,7 @@ const Cart = (props) => {
   const updateQuantity = async (index, quantity) => {
     if (quantity < 1) return;
 
-    const item = cartItems[index];
+    const item = cartItems[index];    
 
     try {
       await fetch(`https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/`, {
@@ -55,7 +55,13 @@ const Cart = (props) => {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ quantity, amount: item.amount, user_id: localStorage.getItem('userID'), path: "/put/cart", itemId: item.item_id })
+        body: JSON.stringify({ 
+          quantity, 
+          amount: item.amount, 
+          user_id: localStorage.getItem('userID'), 
+          product_quantity: item.price_quantity,
+          path: "/put/cart", 
+          itemId: item.item_id })
       });
 
       const updatedCartItems = [...cartItems];
@@ -122,8 +128,8 @@ const Cart = (props) => {
                     <Col xs={7} md={7}>
                       <Card.Body className='border-0'>
                         <Card.Title>{item.name}</Card.Title>
-                        <Card.Text>
-                          <strong>Price:</strong> ₹{item.amount}
+                        <Card.Text className='fs-12'>
+                          <strong>Price:</strong> ₹{item.amount} ({item.price_quantity})
                         </Card.Text>
                         <Card.Text>
                           <strong>Total:</strong> ₹{(item.amount * item.quantity).toFixed(2)}
