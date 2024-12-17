@@ -116,6 +116,9 @@ const ManageOrders = (props) => {
     setSelectedPartner(selectedPartnerId);
   };
 
+  console.log("groupedOrders", groupedOrders.placed);
+  
+
   return (
     <div className="manage-orders">
         <nav aria-label="breadcrumb" className="breadcrumb-container">
@@ -134,7 +137,7 @@ const ManageOrders = (props) => {
           <Accordion.Header>Placed Orders ({groupedOrders.placed.length})</Accordion.Header>
           <Accordion.Body>
             {groupedOrders.placed.length > 0 ? (
-              groupedOrders.placed.map(order => (
+              groupedOrders.placed.sort((a,b) => b.id - a.id).map(order => (
                 <Card key={order.id} className="mb-3">
                   <Card.Body>
                     <Card.Title>Order ID: {order.id}</Card.Title>
@@ -174,7 +177,7 @@ const ManageOrders = (props) => {
           <Accordion.Header>Confirmed Orders ({groupedOrders.confirmed.length})</Accordion.Header>
           <Accordion.Body>
             {groupedOrders.confirmed.length > 0 ? (
-              groupedOrders.confirmed.map(order => (
+              groupedOrders.confirmed.sort((a,b) => b.id - a.id).map(order => (
                 <Card key={order.id} className="mb-3">
                   <Card.Body>
                     <Card.Title>Order ID: {order.id}</Card.Title>
@@ -226,7 +229,7 @@ const ManageOrders = (props) => {
           <Accordion.Header>Delivery Scheduled Orders ({groupedOrders.delivery_scheduled.length})</Accordion.Header>
           <Accordion.Body>
             {groupedOrders.delivery_scheduled.length > 0 ? (
-              groupedOrders.delivery_scheduled.map(order => (
+              groupedOrders.delivery_scheduled.sort((a,b) => b.id - a.id).map(order => (
                 <Card key={order.id} className="mb-3">
                   <Card.Body>
                     <Card.Title>Order ID: {order.id}</Card.Title>
@@ -269,7 +272,7 @@ const ManageOrders = (props) => {
           <Accordion.Header>Delivered Orders ({groupedOrders.delivered.length})</Accordion.Header>
           <Accordion.Body>
             {groupedOrders.delivered.length > 0 ? (
-              groupedOrders.delivered.map(order => (
+              groupedOrders.delivered.sort((a,b) => b.id - a.id).map(order => (
                 <Card key={order.id} className="mb-3">
                   <Card.Body>
                     <Card.Title>Order ID: {order.id}</Card.Title>
@@ -305,7 +308,7 @@ const ManageOrders = (props) => {
           <Accordion.Header>Declined Orders ({groupedOrders.declined.length})</Accordion.Header>
           <Accordion.Body>
             {groupedOrders.declined.length > 0 ? (
-              groupedOrders.declined.map(order => (
+              groupedOrders.declined.sort((a,b) => b.id - a.id).map(order => (
                 <Card key={order.id} className="mb-3">
                   <Card.Body>
                     <Card.Title>Order ID: {order.id}</Card.Title>

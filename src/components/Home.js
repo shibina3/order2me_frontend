@@ -11,6 +11,7 @@ const HomePage = ({setActiveTab, setCategoryId, setCartNumber, cartNumber, setAc
   const [isLoading, setLoading] = useState(true);
   const [details, setDetails] = useState([]);
   const [appStatus, setAppStatus] = useState('ON');
+  const [selectedQuantities, setSelectedQuantities] = useState({});
 
   useEffect(() => {
     async function fetchData() {      
@@ -120,7 +121,7 @@ const HomePage = ({setActiveTab, setCategoryId, setCartNumber, cartNumber, setAc
     const newQuantity = currentQuantity + 1;
 
     const item = [...popularItems, ...newArrivals].find(item => item.id === itemId);
-    item.selectedQuantity = item.selectedQuantity || item.price_details[0].quantity;
+    item.selectedQuantity = selectedQuantities[itemId] ? item.price_details[selectedQuantities[itemId]].quantity : item.price_details[0].quantity;
     const selectedPriceDetail = item.price_details.find(detail => detail.quantity === item.selectedQuantity) || item.price_details[0];
 
     await fetch(`https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/`, {
@@ -147,7 +148,7 @@ const HomePage = ({setActiveTab, setCategoryId, setCartNumber, cartNumber, setAc
     const newQuantity = currentQuantity - 1;
 
     const item = [...popularItems, ...newArrivals].find(item => item.id === itemId);
-    item.selectedQuantity = item.selectedQuantity || item.price_details[0].quantity;
+    item.selectedQuantity = selectedQuantities[itemId] ? item.price_details[selectedQuantities[itemId]].quantity : item.price_details[0].quantity;
     const selectedPriceDetail = item.price_details.find(detail => detail.quantity === item.selectedQuantity) || item.price_details[0];
 
     if (newQuantity > 0) {
@@ -185,8 +186,10 @@ const HomePage = ({setActiveTab, setCategoryId, setCartNumber, cartNumber, setAc
   };
 
   const handleAddToCart = async (itemId) => {
+    console.log("selectedQuantities", selectedQuantities, itemId);
+    
     const item = [...popularItems, ...newArrivals].find(item => item.id === itemId);
-    item.selectedQuantity = item.selectedQuantity || item.price_details[0].quantity;
+    item.selectedQuantity = selectedQuantities[itemId] ? item.price_details[selectedQuantities[itemId]].quantity : item.price_details[0].quantity;
     
     const selectedPriceDetail = item.price_details.find(detail => detail.quantity === item.selectedQuantity) || item.price_details[0];
 
@@ -247,6 +250,13 @@ const HomePage = ({setActiveTab, setCategoryId, setCartNumber, cartNumber, setAc
     }
   }  
 
+  const handleQuantityChange = (itemId, quantityIndex) => {
+    setSelectedQuantities(prevState => ({
+      ...prevState,
+      [itemId]: quantityIndex
+    }));
+  };
+
   return (
     !isLoading ? (<div className="home-page">
       {/* Banner for Available Timings */}
@@ -282,29 +292,47 @@ const HomePage = ({setActiveTab, setCategoryId, setCartNumber, cartNumber, setAc
             <FaArrowLeft />
           </button>
           <div className="carousel-content" ref={popularRef}>
-            {popularItems.length ? (
-              popularItems.map((item, index) => (
-                <Card key={index} style={{ width: '18rem', marginRight: '15px', height: '80%' }} className="d-inline-block carousel-item">
-                  <Card.Img variant="top" className="cardImage" src={item.image_url} />
-                  <Card.Body>
-                    <Card.Title><span className='carousel-item-name'>{item.name}</span>
-                    {
-                        wishlistItems.includes(item.id) ? 
-                        <span className='items-wishlist wishlisted'>
+          { 
+            popularItems.length ? (
+              popularItems.map((item, index) => {
+                const selectedQuantityIndex = selectedQuantities[item.id] || 0;
+                const selectedPriceDetail = item.price_details[selectedQuantityIndex];
+
+                return (
+                  <Card key={index} style={{ width: '18rem', marginRight: '15px', height: '80%' }} className="d-inline-block carousel-item">
+                    <Card.Img variant="top" className="cardImage" src={item.image_url} />
+                    <Card.Body>
+                      <Card.Title>
+                        <span className='carousel-item-name'>{item.name}</span>
+                        {
+                          wishlistItems.includes(item.id) ? 
+                          <span className='items-wishlist wishlisted'>
                             <FaHeart onClick={() => handleAddRemoveWishist(item.id, false)} />
-                        </span> : 
-                        <span className='items-wishlist not-wishlisted'>
+                          </span> : 
+                          <span className='items-wishlist not-wishlisted'>
                             <FaRegHeart onClick={() => handleAddRemoveWishist(item.id, true)} />
-                        </span>
-                    }
-                    </Card.Title>
-                    <Card.Text className='d-flex justify-content-between carousel-item-desc'>₹ {item.price_details[0].amount} ({item.price_details[0].quantity}){item.stock === 'out-of-stock' ? <div className='m-3 text-danger'><span>Out of stock</span></div> : renderItemControls(item.id)}</Card.Text>
-                  </Card.Body>
-                </Card>
-              ))
-            ) : (
-              <p>No popular items available.</p>
-            )}
+                          </span>
+                        }
+                      </Card.Title>
+                      <Card.Text className='d-flex justify-content-between carousel-item-desc'>
+                        ₹ {selectedPriceDetail.amount} 
+                        <select onChange={(e) => handleQuantityChange(item.id, e.target.value)} value={selectedQuantityIndex}>
+                          {item.price_details.map((priceDetail, idx) => (
+                            <option key={idx} value={idx}>{priceDetail.quantity}</option>
+                          ))}
+                        </select>
+                        {item.stock === 'out-of-stock' ? 
+                          <div className='m-3 text-danger'><span>Out of stock</span></div> : 
+                          renderItemControls(item.id)
+                        }
+                      </Card.Text>
+                    </Card.Body>
+                  </Card>
+                );
+              })
+            ) : 
+            <p>No popular items available.</p>
+          }
           </div>
           <button className="carousel-control carousel-control-right" onClick={() => handleScroll('right', popularRef)} disabled={!popularItems.length}>
             <FaArrowRight />
@@ -366,29 +394,48 @@ const HomePage = ({setActiveTab, setCategoryId, setCartNumber, cartNumber, setAc
             <FaArrowLeft />
           </button>
           <div className="carousel-content" ref={newArrivalsRef}>
-            {newArrivals.length ? (
-              newArrivals.map((item, index) => (
-                <Card key={index} style={{ width: '18rem', marginRight: '15px' }} className="d-inline-block carousel-item">
-                  <Card.Img variant="top" className="cardImage" src={item.image_url} />
-                  <Card.Body>
-                    <Card.Title><span className='carousel-item-name'>{item.name}</span>
-                    {
-                        wishlistItems.includes(item.id) ? 
-                        <span className='items-wishlist wishlisted'>
+          {
+            newArrivals.length ? (
+              newArrivals.map((item, index) => {
+                const selectedQuantityIndex = selectedQuantities[item.id] || 0;
+                const selectedPriceDetail = item.price_details[selectedQuantityIndex];
+
+                return (
+                  <Card key={index} style={{ width: '18rem', marginRight: '15px' }} className="d-inline-block carousel-item">
+                    <Card.Img variant="top" className="cardImage" src={item.image_url} />
+                    <Card.Body>
+                      <Card.Title>
+                        <span className='carousel-item-name'>{item.name}</span>
+                        {
+                          wishlistItems.includes(item.id) ? 
+                          <span className='items-wishlist wishlisted'>
                             <FaHeart onClick={() => handleAddRemoveWishist(item.id, false)} />
-                        </span> : 
-                        <span className='items-wishlist not-wishlisted'>
+                          </span> : 
+                          <span className='items-wishlist not-wishlisted'>
                             <FaRegHeart onClick={() => handleAddRemoveWishist(item.id, true)} />
-                        </span>
-                    }
-                    </Card.Title>
-                    <Card.Text className='d-flex justify-content-between carousel-item-desc'>₹ {item.price_details[0].amount} ({item.price_details[0].quantity}){renderItemControls(item.id)}</Card.Text>
-                  </Card.Body>
-                </Card>
-              ))
+                          </span>
+                        }
+                      </Card.Title>
+                      <Card.Text className='d-flex justify-content-between carousel-item-desc'>
+                        ₹ {selectedPriceDetail.amount}
+                        <select onChange={(e) => handleQuantityChange(item.id, e.target.value)} value={selectedQuantityIndex}>
+                          {item.price_details.map((priceDetail, idx) => (
+                            <option key={idx} value={idx}>{priceDetail.quantity}</option>
+                          ))}
+                        </select>
+                        {item.stock === 'out-of-stock' ? 
+                          <div className='m-3 text-danger'><span>Out of stock</span></div> : 
+                          renderItemControls(item.id)
+                        }
+                      </Card.Text>
+                    </Card.Body>
+                  </Card>
+                );
+              })
             ) : (
               <p>No new arrivals available.</p>
-            )}
+            )
+          }
           </div>
           <button className="carousel-control carousel-control-right" onClick={() => handleScroll('right', newArrivalsRef)} disabled={!newArrivals.length}>
             <FaArrowRight />

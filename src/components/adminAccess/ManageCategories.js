@@ -38,7 +38,7 @@ const ManageCategories = (props) => {
     });
     let allCategories = await allCategoriesRes.json();
     allCategories = JSON.parse(allCategories.body);
-    allCategories = allCategories.sort((a, b) => a.id - b.id);
+    allCategories = allCategories.sort((a, b) => a.order - b.order);
 
     const groupedCategories = allCategories.reduce((acc, category) => {
       acc[category.location] = acc[category.location] || [];
@@ -141,22 +141,26 @@ const ManageCategories = (props) => {
   };
 
   const handleReorderCategories = async (locationKey, reorderedCategories) => {
+    const updatedCategories = reorderedCategories.map((category, index) => ({
+      ...category,
+      order: index + 1,
+    }));
 
     const updateOrderRes = await fetch(`https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({order: reorderedCategories, path: "/update/categories_order"}),
+      body: JSON.stringify({ order: updatedCategories, path: "/update/categories_order" }),
     });
     let updateOrderData = await updateOrderRes.json();
     if (updateOrderData.message === "Categories Order Updated") {
       setCategories((prev) => ({
         ...prev,
-        [locationKey]: reorderedCategories,
+        [locationKey]: updatedCategories,
       }));
     }
-  }
+  };
 
   const onDragEnd = (result, locationKey) => {
     if (!result.destination) return; 
@@ -167,10 +171,6 @@ const ManageCategories = (props) => {
     let reorderedCategories = Array.from(categories[locationKey]);
     const [movedItem] = reorderedCategories.splice(sourceIndex, 1);
     reorderedCategories.splice(destinationIndex, 0, movedItem);
-    reorderedCategories = reorderedCategories.map((category, index) => ({
-      ...category,
-      id: index + 1,
-    }));    
 
     handleReorderCategories(locationKey, reorderedCategories);
   };

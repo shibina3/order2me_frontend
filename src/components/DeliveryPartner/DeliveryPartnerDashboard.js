@@ -142,7 +142,7 @@ const DeliveryPartnerDashboard = (props) => {
           <Accordion.Header>Assigned Orders ({groupedOrders.delivery_scheduled.length})</Accordion.Header>
           <Accordion.Body>
             {groupedOrders.delivery_scheduled.length > 0 ? (
-              groupedOrders.delivery_scheduled.map(order => (
+              groupedOrders.delivery_scheduled.sort((a,b) => b.id - a.id).map(order => (
                 <Card key={order.id} className="mb-3">
                   <Card.Body>
                     <Card.Title>Order ID: {order.id}</Card.Title>
@@ -193,7 +193,7 @@ const DeliveryPartnerDashboard = (props) => {
           <Accordion.Header>Delivered Orders ({groupedOrders.delivered.length})</Accordion.Header>
           <Accordion.Body>
             {groupedOrders.delivered.length > 0 ? (
-              groupedOrders.delivered.map(order => (
+              groupedOrders.delivered.sort((a,b) => b.id - a.id).map(order => (
                 <Card key={order.id} className="mb-3">
                   <Card.Body>
                     <Card.Title>Order ID: {order.id}</Card.Title>

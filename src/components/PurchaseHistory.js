@@ -40,7 +40,7 @@ const PurchaseHistory = () => {
   };
 
   const getOrderTotal = (items) => {
-    return items.reduce((acc, item) => acc + parseFloat(item.price), 0).toFixed(2);
+    return items.reduce((acc, item) => acc + parseFloat(item.price * item.quantity), 0).toFixed(2);
   };
 
   return (
@@ -72,9 +72,9 @@ const PurchaseHistory = () => {
                     {order.order_items.map((item) => (
                       <ListGroup.Item key={item.id}>
                         <div className="d-flex justify-content-between">
-                          <span><img className='purchase_img' src={item.image_url} alt="" />{item.item_name}</span>
+                          <span><img className='purchase_img' src={item.image_url} alt="" />{item.item_name} ({item.product_quantity})</span>
                           <span>Qty: {item.quantity}</span>
-                          <span>Price: ₹{item.price}</span>
+                          <span>Price: ₹{item.price * item.quantity}</span>
                         </div>
                       </ListGroup.Item>
                     ))}

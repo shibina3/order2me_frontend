@@ -14,6 +14,7 @@ const Checkout = ({ setActivePage, city, setCartNumber }) => {
   const [buildingNo, setBuildingNo] = useState('');
   const [addrLine1, setAddrLine1] = useState('');
   const [addrLine2, setAddrLine2] = useState('');
+  const [landmark, setLandmark] = useState('');
 
   useEffect(() => {
     async function fetchItems() {
@@ -75,9 +76,19 @@ const Checkout = ({ setActivePage, city, setCartNumber }) => {
     setAddress(`${buildingNo}, ${addrLine1}, ${value}`);
   }
 
+  const handleLandmarkChange = (e) => {
+    const value = e.target.value;
+    setLandmark(value);
+    setAddress(`${buildingNo}, ${addrLine1}, ${addrLine2}, Landmark - ${value}`);
+  }
+
   const handlePhoneChange = (e) => setPhoneNumber(e.target.value);
 
   const saveAddress = () => {
+    if(!landmark) { 
+      alert('Please enter a landmark');
+      return;
+    }
     localStorage.setItem('address', address);
     setIsEditing(false);
   };
@@ -87,6 +98,8 @@ const Checkout = ({ setActivePage, city, setCartNumber }) => {
   };
 
   const handlePayment = async () => {
+    console.log("items", items);
+    
     if( !selectedTimeSlot || !deliveryFee ) { 
       alert('Please select a time slot and area');
       return; }
@@ -165,6 +178,13 @@ const Checkout = ({ setActivePage, city, setCartNumber }) => {
                 value={addrLine2} 
                 onChange={handleAddrLine2Change} 
                 placeholder="Address line 2" 
+              />
+              <input 
+                type="text" 
+                className="form-control mb-2" 
+                value={landmark} 
+                onChange={handleLandmarkChange} 
+                placeholder="Landmark *" 
               />
             <button className="checkout-details" onClick={saveAddress}>
               Save Address

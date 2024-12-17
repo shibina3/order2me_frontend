@@ -35,7 +35,7 @@ const SubNavbar = ({ setActiveTab, activeTab, setCategoryId }) => {
         >
           All
         </div>
-        {tabs?.map((tab, index) => (
+        {tabs?.sort((a,b) => a.order - b.order)?.map((tab, index) => (
           <div
             key={index}
             className={`nav-tab ${activeTab === tab.name ? 'active' : ''}`}
