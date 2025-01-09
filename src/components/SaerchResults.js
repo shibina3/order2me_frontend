@@ -2,11 +2,12 @@ import React, { useEffect, useState } from 'react';
 import { Alert } from 'react-bootstrap';
 import { FaRegHeart, FaHeart } from "react-icons/fa";
 
-export default function SearchResults({setCartNumber}) {
+export default function SearchResults({ setCartNumber }) {
     const [items, setItems] = useState([]);
     const [cartItems, setCartItems] = useState({});
     const [wishlistItems, setWishlistItems] = useState([]);
     const [searchQuery, setSearchQuery] = useState('');
+    const [showPopup, setShowPopup] = useState(false);
 
     useEffect(() => {
         async function fetchData() {
@@ -15,7 +16,7 @@ export default function SearchResults({setCartNumber}) {
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({path: "/get/items"})
+                body: JSON.stringify({ path: "/get/items" })
             });
             let itemsData = await itemsRes.json();
             itemsData = JSON.parse(itemsData.body);
@@ -25,13 +26,13 @@ export default function SearchResults({setCartNumber}) {
             const cartRes = await fetch(`https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/`, {
                 method: 'POST',
                 headers: {
-                  'Content-Type': 'application/json',
+                    'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({path: "/get/cart", userId: localStorage.getItem('userID') })
+                body: JSON.stringify({ path: "/get/cart", userId: localStorage.getItem('userID') })
             });
             let cartData = await cartRes.json();
             cartData = JSON.parse(cartData.body);
-            
+
             const cartMap = cartData.reduce((acc, item) => {
                 acc[item.item_id] = item.quantity;
                 return acc;
@@ -42,11 +43,11 @@ export default function SearchResults({setCartNumber}) {
             setCartNumber(Object.values(cartMap).reduce((sum, item) => sum + item, 0));
 
         }
-        const fetchWishlist = async() => {
+        const fetchWishlist = async () => {
             const allWishlistItemRes = await fetch(`https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/`, {
                 method: 'POST',
                 headers: {
-                  'Content-Type': 'application/json',
+                    'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
                     user_id: localStorage.getItem('userID'),
@@ -56,7 +57,7 @@ export default function SearchResults({setCartNumber}) {
             let allWishlistItems = await allWishlistItemRes.json();
             allWishlistItems = JSON.parse(allWishlistItems.body);
             allWishlistItems = allWishlistItems.length ? allWishlistItems.map(wish => wish.id) : [];
-            
+
             setWishlistItems(allWishlistItems);
         }
         fetchData();
@@ -65,7 +66,7 @@ export default function SearchResults({setCartNumber}) {
 
     const handleQuantityChange = (itemId, event) => {
         const selectedQuantity = event.target.value;
-        setItems(items.map(item => 
+        setItems(items.map(item =>
             item.id === itemId
                 ? { ...item, selectedQuantity }
                 : item
@@ -79,23 +80,54 @@ export default function SearchResults({setCartNumber}) {
         const cartItem = {
             user_id: localStorage.getItem('userID'),
             item_id: itemId,
-            quantity: 1, 
+            quantity: 1,
             amount: selectedPriceDetail.amount,
-            product_quantity: item.selectedQuantity,
-            path: "/post/cart"
+            product_quantity: selectedPriceDetail.quantity,
+            path: "/post/cart",
+            location: localStorage.getItem('userCity')
         };
 
-        await fetch(`https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/`, {
+        let addRes = await fetch(`https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(cartItem)
+        });
+        let addData = await addRes.json();
+        addData = JSON.parse(addData.body);
+        if (addData.error) {
+            setShowPopup(true);
+            localStorage.setItem('replacableItem', JSON.stringify(cartItem));
+            return;
+        }
+        let newCartItems = { ...cartItems, [itemId]: 1 };
+        setCartItems(newCartItems);
+        setCartNumber(Object.values(newCartItems).reduce((sum, item) => sum + item, 0));
+    };
+
+    const handleClearAndAddToCart = async () => {
+        setShowPopup(false)
+        const cartItem = JSON.parse(localStorage.getItem('replacableItem'));
+        cartItem.path = "/clear/post/cart";
+
+        let addRes = await fetch(`https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
             },
             body: JSON.stringify(cartItem)
         });
-        let newCartItems = { ...cartItems, [itemId]: 1 };
+
+        let addData = await addRes.json();
+        addData = JSON.parse(addData.body);
+        if(addData.error) {
+            return;
+        }
+        let newCartItems = { [cartItem.item_id]: 1 };
         setCartItems(newCartItems);
         setCartNumber(Object.values(newCartItems).reduce((sum, item) => sum + item, 0));
-    };
+    }
 
     const handleIncrement = async (itemId) => {
         const currentQuantity = cartItems[itemId] || 0;
@@ -107,15 +139,15 @@ export default function SearchResults({setCartNumber}) {
         await fetch(`https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/`, {
             method: 'POST',
             headers: {
-              'Content-Type': 'application/json',
+                'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ 
-                quantity: newQuantity, 
-                amount: selectedPriceDetail.amount, 
-                user_id: localStorage.getItem('userID'), 
-                product_quantity: item.selectedQuantity,
-                id: itemId, 
-                path: "/put/cart" 
+            body: JSON.stringify({
+                quantity: newQuantity,
+                amount: selectedPriceDetail.amount,
+                user_id: localStorage.getItem('userID'),
+                product_quantity: selectedPriceDetail.quantity,
+                itemId: itemId,
+                path: "/put/cart"
             })
         });
         let newCartItems = { ...cartItems, [itemId]: newQuantity };
@@ -134,14 +166,15 @@ export default function SearchResults({setCartNumber}) {
             await fetch(`https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/`, {
                 method: 'POST',
                 headers: {
-                  'Content-Type': 'application/json',
+                    'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ 
-                    path: "/put/cart", 
-                    quantity: newQuantity, 
-                    amount: selectedPriceDetail.amount, 
-                    product_quantity: item.selectedQuantity,
-                    user_id: localStorage.getItem('userID') 
+                body: JSON.stringify({
+                    path: "/put/cart",
+                    quantity: newQuantity,
+                    amount: selectedPriceDetail.amount,
+                    product_quantity: selectedPriceDetail.quantity,
+                    itemId: itemId,
+                    user_id: localStorage.getItem('userID')
                 })
             });
             let newCartItems = { ...cartItems, [itemId]: newQuantity };
@@ -151,7 +184,7 @@ export default function SearchResults({setCartNumber}) {
             await fetch(`https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/`, {
                 method: 'POST',
                 headers: {
-                  'Content-Type': 'application/json',
+                    'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({ path: "/delete/cart", user_id: localStorage.getItem('userID'), id: itemId })
             });
@@ -172,7 +205,7 @@ export default function SearchResults({setCartNumber}) {
         await fetch(`https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/`, {
             method: 'POST',
             headers: {
-              'Content-Type': 'application/json',
+                'Content-Type': 'application/json',
             },
             body: JSON.stringify(payload)
         });
@@ -190,76 +223,91 @@ export default function SearchResults({setCartNumber}) {
     };
 
     return (
-        <div className="items-container">
-            <div>
-                <input type='text' placeholder="Search items..."
-                    value={searchQuery}
-                    onChange={handleSearchChange} />
-            </div>
-            {searchQuery.length === 0 ? <Alert>No matches found</Alert> : items.filter(item => {
+        <>
+            <div className="items-container">
+                <div>
+                    <input type='text' placeholder="Search items..."
+                        value={searchQuery}
+                        onChange={handleSearchChange} />
+                </div>
+                {searchQuery.length === 0 ? <Alert>No matches found</Alert> : items.filter(item => {
                     return item.name.toLowerCase().includes(searchQuery.toLowerCase())
                 }).length ? items.filter(item => {
                     return item.name.toLowerCase().includes(searchQuery.toLowerCase())
                 }).map(item => {
-                const selectedPriceDetail = item.price_details.find(detail => detail.quantity === item.selectedQuantity) || item.price_details[0];
-                const cartQuantity = cartItems[item.id] || 0;
+                    const selectedPriceDetail = item.price_details.find(detail => detail.quantity === item.selectedQuantity) || item.price_details[0];
+                    const cartQuantity = cartItems[item.id] || 0;
 
-                return (
-                    <div key={item.id} className="item-card">
-                        <div className="item-image">
-                            {item.popular_item && item.new_arrival ? (
-                                <div className="item-flag flag-recommended">Recommended</div>
-                            ) : item.popular_item ? (
-                                <div className="item-flag flag-popular">Popular</div>
-                            ) : item.new_arrival ? (
-                                <div className="item-flag flag-new-arrival">New Arrival</div>
-                            ) : null}
-                            <img src={item.image_url} alt={item.name} />
-                        </div>
-                        <div className="item-details">
-                            <div className='wishlist-cont'>
-                                {
-                                    wishlistItems.includes(item.id) ? 
-                                    <span className='items-wishlist wishlisted'>
-                                        <FaHeart onClick={() => handleAddRemoveWishist(item.id, false)} />
-                                    </span> : 
-                                    <span className='items-wishlist'>
-                                        <FaRegHeart onClick={() => handleAddRemoveWishist(item.id, true)} />
-                                    </span>
-                                }
+                    return (
+                        <div key={item.id} className="item-card">
+                            <div className="item-image">
+                                {item.popular_item && item.new_arrival ? (
+                                    <div className="item-flag flag-recommended">Recommended</div>
+                                ) : item.popular_item ? (
+                                    <div className="item-flag flag-popular">Popular</div>
+                                ) : item.new_arrival ? (
+                                    <div className="item-flag flag-new-arrival">New Arrival</div>
+                                ) : null}
+                                <img src={item.image_url} alt={item.name} />
                             </div>
-                            <h3 className='item-title'>{item.name}</h3>
-                            <div className="dropdown-container">
-                                <select
-                                    defaultValue={item.price_details[0].quantity}
-                                    onChange={(event) => handleQuantityChange(item.id, event)}
-                                >
-                                    {item.price_details.map((priceDetail, index) => (
-                                        <option key={index} value={priceDetail.quantity}>
-                                            {priceDetail.quantity}
-                                        </option>
-                                    ))}
-                                </select>
-                                <span className="amount-display">
-                                    ₹{selectedPriceDetail.amount}
-                                </span>
-                            </div>
-                            {item.stock === 'out-of-stock' ? 
-                            <div className='m-3 text-danger'><span>Out of stock</span></div> :
-                             cartQuantity > 0 ? (
-                                <div className="mt-2 cart-controls">
-                                    <button className="quantity-btn" onClick={() => handleDecrement(item.id)}>-</button>
-                                    <span className="cart-quantity">{cartQuantity}</span>
-                                    <button className="quantity-btn" onClick={() => handleIncrement(item.id)}>+</button>
+                            <div className="item-details">
+                                <div className='wishlist-cont'>
+                                    {
+                                        wishlistItems.includes(item.id) ?
+                                            <span className='items-wishlist wishlisted'>
+                                                <FaHeart onClick={() => handleAddRemoveWishist(item.id, false)} />
+                                            </span> :
+                                            <span className='items-wishlist'>
+                                                <FaRegHeart onClick={() => handleAddRemoveWishist(item.id, true)} />
+                                            </span>
+                                    }
                                 </div>
-                            ) : (<button className="mt-2 add-to-cart-btn fs-6" onClick={() => handleAddToCart(item.id)}>
-                                    Add +
-                                </button>
-                            )}
+                                <h3 className='item-title'>{item.name}</h3>
+                                <div className="dropdown-container">
+                                    <select
+                                        defaultValue={item.price_details[0].quantity}
+                                        onChange={(event) => handleQuantityChange(item.id, event)}
+                                    >
+                                        {item.price_details.map((priceDetail, index) => (
+                                            <option key={index} value={priceDetail.quantity}>
+                                                {priceDetail.quantity}
+                                            </option>
+                                        ))}
+                                    </select>
+                                    <span className="amount-display">
+                                        ₹{selectedPriceDetail.amount}
+                                    </span>
+                                </div>
+                                {item.stock === 'out-of-stock' ?
+                                    <div className='m-3 text-danger'><span>Out of stock</span></div> :
+                                    cartQuantity > 0 ? (
+                                        <div className="mt-2 cart-controls">
+                                            <button className="quantity-btn" onClick={() => handleDecrement(item.id)}>-</button>
+                                            <span className="cart-quantity">{cartQuantity}</span>
+                                            <button className="quantity-btn" onClick={() => handleIncrement(item.id)}>+</button>
+                                        </div>
+                                    ) : (<button className="mt-2 add-to-cart-btn fs-6" onClick={() => handleAddToCart(item.id)}>
+                                        Add +
+                                    </button>
+                                    )}
+                            </div>
+                        </div>
+                    );
+                }) : <Alert>No matches found</Alert>}
+            </div>
+            {
+                showPopup ? <div className="popup-container">
+                    <div className="popup">
+                        <div className="popup-content bg-white p-3 m-3">
+                            <p style={{ fontSize: '12px', textAlign: 'center' }}>You cannot purchase this item with the items currently in your cart. Would you like to clear your cart and add this instead?</p>
+                            <div className='d-flex justify-content-center'>
+                                <button className="btn btn-success" onClick={handleClearAndAddToCart}>Yes</button>
+                                <button className="btn btn-warning" onClick={() => setShowPopup(false)}>No</button>
+                            </div>
                         </div>
                     </div>
-                );
-            }): <Alert>No matches found</Alert>}
-        </div>
+                </div> : null
+            }
+        </>
     );
 }

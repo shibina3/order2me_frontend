@@ -15,6 +15,7 @@ const Checkout = ({ setActivePage, city, setCartNumber }) => {
   const [addrLine1, setAddrLine1] = useState('');
   const [addrLine2, setAddrLine2] = useState('');
   const [landmark, setLandmark] = useState('');
+  const [instructions, setInstructions] = useState('');
 
   useEffect(() => {
     async function fetchItems() {
@@ -115,6 +116,7 @@ const Checkout = ({ setActivePage, city, setCartNumber }) => {
         payment_method: paymentMethod,
         items: items,
         selectedTimeSlot: selectedTimeSlot,
+        instructions: instructions,
         path: "/post/orders"
       }),
     });
@@ -151,6 +153,17 @@ const Checkout = ({ setActivePage, city, setCartNumber }) => {
         ) : (
           <p>No items in the cart.</p>
         )}
+      </div>
+
+      {/* get Instructions from Customer */}
+      <div className="instructions-section mb-5">
+        <h4>Give instructions</h4>
+        <textarea
+          className="form-control"
+          placeholder="Any special instructions?"
+          value={instructions}
+          onChange={(e) => setInstructions(e.target.value)}
+        ></textarea>
       </div>
 
       {/* Address Section */}

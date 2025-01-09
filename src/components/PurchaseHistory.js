@@ -68,6 +68,9 @@ const PurchaseHistory = () => {
                   {
                     (order.order_status === "delivery_scheduled" && order.otp) ? <Card.Title>OTP: {order.otp}</Card.Title> : <></>
                   }
+                  {
+                    order.instructions ? <Card.Text><b>Instructions:</b> {order.instructions}</Card.Text> : <></>
+                  }
                   <ListGroup variant="flush">
                     {order.order_items.map((item) => (
                       <ListGroup.Item key={item.id}>

@@ -25,6 +25,7 @@ import ManageProducts from './components/adminAccess/ManageProducts';
 import ManageOrders from './components/adminAccess/ManageOrders';
 import DeliveryPartnerDashboard from './components/DeliveryPartner/DeliveryPartnerDashboard';
 import ManageTimeSlots from './components/adminAccess/ManageTimeSlots';
+import ClubCategories from './components/adminAccess/ClubCategories';
 
 function App() {
   const [activePage, setActivePage] = useState(localStorage.getItem('email') ? 'home' : 'login');
@@ -143,6 +144,7 @@ function App() {
         activePage === "admin" ? <AdminDashboard setActivePage={setActivePage} appStatus={appStatus} toggleAppStatus={toggleAppStatus} /> :
         activePage === "manage-locations" ? <ManageLocations setActivePage={setActivePage} /> :
         activePage === "manage-categories" ? <ManageCategories setActivePage={setActivePage} /> :
+        activePage === "club_categories" ? <ClubCategories setActivePage={setActivePage} /> :
         activePage === "manage-access" ? <ManageAccess setActivePage={setActivePage} /> :
         activePage === "manage-details" ? <ManageDetails setActivePage={setActivePage} /> :
         activePage === "manage-delivery-charges" ? <ManageDeliveryCharges setActivePage={setActivePage} /> :

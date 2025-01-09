@@ -153,6 +153,9 @@ const DeliveryPartnerDashboard = (props) => {
                     <Card.Text>Order Status: {order.order_status}</Card.Text>
                     <Card.Text>Order Date: {new Date(order.created_at).toLocaleString()}</Card.Text>
                     <Card.Text>Chosen Time Slot: {order.selected_timeslot || 'NA'}</Card.Text>
+                    {
+                      order.instructions && <Card.Text><b>Instructions:</b> {order.instructions}</Card.Text>
+                    }
                     <Card.Text>Assigned Partner: {localStorage.getItem('name')}</Card.Text>
                     <ListGroup variant="flush">
                       {order?.order_items.map((item) => (
@@ -204,6 +207,9 @@ const DeliveryPartnerDashboard = (props) => {
                     <Card.Text>Order Status: {order.order_status}</Card.Text>
                     <Card.Text>Order Date: {new Date(order.created_at).toLocaleString()}</Card.Text>
                     <Card.Text>Chosen Time Slot: {order.selected_timeslot || 'NA'}</Card.Text>
+                    {
+                      order.instructions && <Card.Text><b>Instructions:</b> {order.instructions}</Card.Text>
+                    }
                     <ListGroup variant="flush">
                       {order?.order_items.map((item) => (
                         <ListGroup.Item key={item.id}>

@@ -16,7 +16,7 @@ const SubNavbar = ({ setActiveTab, activeTab, setCategoryId }) => {
       data = JSON.parse(data.body);
       data = data.filter(cat => cat.location === localStorage.getItem('userCity'))
       data = data.sort((a,b) => a.id - b.id)
-
+      console.log(data);
       setTabs(data);
     }
 

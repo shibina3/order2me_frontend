@@ -6,6 +6,7 @@ export default function Wishlist({ setCartNumber }) {
     const [cartItems, setCartItems] = useState({});
     const [isLoading, setLoading] = useState(true);
     const [wishlistItems, setWishlistItems] = useState([]);
+    const [showPopup, setShowPopup] = useState(false);
 
     useEffect(() => {
         async function fetchData() {
@@ -60,6 +61,8 @@ export default function Wishlist({ setCartNumber }) {
 
     const handleAddToCart = async (itemId) => {
         const item = wishlistItems.find(item => item.id === itemId);
+        console.log("item.price_details", item.price_details);
+        
         const selectedPriceDetail = item.price_details.find(detail => detail.quantity === item.selectedQuantity) || item.price_details[0];
 
         const cartItem = {
@@ -67,21 +70,52 @@ export default function Wishlist({ setCartNumber }) {
             item_id: itemId,
             quantity: 1, 
             amount: selectedPriceDetail.amount,
-            product_quantity: item.selectedQuantity,
-            path: "/post/cart"
+            product_quantity: selectedPriceDetail.quantity,
+            path: "/post/cart",
+            location: localStorage.getItem('userCity')
         };
 
-        await fetch(`https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/`, {
+        let addRes = await fetch(`https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
             },
             body: JSON.stringify(cartItem)
         });
+        let addData = await addRes.json();
+        addData = JSON.parse(addData.body);
+        if(addData.error) {
+            setShowPopup(true);
+            localStorage.setItem('replacableItem', JSON.stringify(cartItem));
+            return;
+        }
         let newCartItems = { ...cartItems, [itemId]: 1 };
         setCartItems(newCartItems);
         setCartNumber(Object.values(newCartItems).reduce((sum, item) => sum + item, 0));
     };
+
+    const handleClearAndAddToCart = async () => {
+        setShowPopup(false)
+        const cartItem = JSON.parse(localStorage.getItem('replacableItem'));
+        cartItem.path = "/clear/post/cart";
+
+        let addRes = await fetch(`https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(cartItem)
+        });
+
+        let addData = await addRes.json();
+        addData = JSON.parse(addData.body);
+        if(addData.error) {
+            return;
+        }
+        let newCartItems = { [cartItem.item_id]: 1 };
+        setCartItems(newCartItems);
+        setCartNumber(Object.values(newCartItems).reduce((sum, item) => sum + item, 0));
+    }
 
     const handleIncrement = async (itemId) => {
         const currentQuantity = cartItems[itemId] || 0;
@@ -99,8 +133,8 @@ export default function Wishlist({ setCartNumber }) {
                 quantity: newQuantity, 
                 amount: selectedPriceDetail.amount, 
                 user_id: localStorage.getItem('userID'), 
-                product_quantity: item.selectedQuantity,
-                id: itemId, 
+                product_quantity: selectedPriceDetail.quantity,
+                itemId: itemId, 
                 path: "/put/cart" 
             })
         });
@@ -126,7 +160,8 @@ export default function Wishlist({ setCartNumber }) {
                     path: "/put/cart", 
                     quantity: newQuantity, 
                     amount: selectedPriceDetail.amount, 
-                    product_quantity: item.selectedQuantity,
+                    product_quantity: selectedPriceDetail.quantity,
+                    itemId: itemId,
                     user_id: localStorage.getItem('userID') 
                 })
             });
@@ -168,6 +203,19 @@ export default function Wishlist({ setCartNumber }) {
 
     return (
         !isLoading ? (<div className="items-container">
+            {
+                showPopup ? <div className="popup-container">
+                    <div className="popup">
+                        <div className="popup-content bg-white p-3 m-3">
+                            <p style={{ fontSize: '12px', textAlign: 'center' }}>You cannot purchase this item with the items currently in your cart. Would you like to clear your cart and add this instead?</p>
+                            <div className='d-flex justify-content-center'>
+                                <button className="btn btn-success" onClick={handleClearAndAddToCart}>Yes</button>
+                                <button className="btn btn-warning" onClick={() => setShowPopup(false)}>No</button>
+                            </div>
+                        </div>
+                    </div>
+                </div> : null
+            }
             {wishlistItems.length ? wishlistItems.map(item => {
                 const selectedPriceDetail = item?.price_details?.find(detail => detail.quantity === item.selectedQuantity) || item.price_details[0];
                 const cartQuantity = cartItems[item.id] || 0;                

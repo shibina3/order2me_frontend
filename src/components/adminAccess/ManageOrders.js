@@ -148,6 +148,9 @@ const ManageOrders = (props) => {
                     <Card.Text>Order Status: {order.order_status}</Card.Text>
                     <Card.Text>Order Date: {new Date(order.created_at).toLocaleString()}</Card.Text>
                     <Card.Text>Chosen Time Slot: {order.selected_timeslot || 'NA'}</Card.Text>
+                    {
+                      order.instructions && <Card.Text><b>Instructions:</b> {order.instructions}</Card.Text>
+                    }
                     <ListGroup variant="flush">
                     {order?.order_items.map((item) => (
                       <ListGroup.Item key={item.id}>
@@ -188,6 +191,9 @@ const ManageOrders = (props) => {
                     <Card.Text>Order Status: {order.order_status}</Card.Text>
                     <Card.Text>Order Date: {new Date(order.created_at).toLocaleString()}</Card.Text>
                     <Card.Text>Chosen Time Slot: {order.selected_timeslot || 'NA'}</Card.Text>
+                    {
+                      order.instructions && <Card.Text><b>Instructions:</b> {order.instructions}</Card.Text>
+                    }
                     <ListGroup variant="flush">
                       {order?.order_items.map((item) => (
                         <ListGroup.Item key={item.id}>
@@ -240,6 +246,9 @@ const ManageOrders = (props) => {
                     <Card.Text>Order Status: {order.order_status}</Card.Text>
                     <Card.Text>Order Date: {new Date(order.created_at).toLocaleString()}</Card.Text>
                     <Card.Text>Chosen Time Slot: {order.selected_timeslot || 'NA'}</Card.Text>
+                    {
+                      order.instructions && <Card.Text><b>Instructions:</b> {order.instructions}</Card.Text>
+                    }
                     <Card.Text>Assigned Partner: {deliveryPartners?.find(part => {
                         return part.id === deliveryAssigned?.find(del => del.order_id === order.id)?.delivery_partner_id
                     })?.username}</Card.Text>
@@ -283,6 +292,9 @@ const ManageOrders = (props) => {
                     <Card.Text>Order Status: {order.order_status}</Card.Text>
                     <Card.Text>Order Date: {new Date(order.created_at).toLocaleString()}</Card.Text>
                     <Card.Text>Chosen Time Slot: {order.selected_timeslot || 'NA'}</Card.Text>
+                    {
+                      order.instructions && <Card.Text><b>Instructions:</b> {order.instructions}</Card.Text>
+                    }
                     <ListGroup variant="flush">
                       {order?.order_items.map((item) => (
                         <ListGroup.Item key={item.id}>
@@ -319,6 +331,9 @@ const ManageOrders = (props) => {
                     <Card.Text>Order Status: {order.order_status}</Card.Text>
                     <Card.Text>Order Date: {new Date(order.created_at).toLocaleString()}</Card.Text>
                     <Card.Text>Chosen Time Slot: {order.selected_timeslot || 'NA'}</Card.Text>
+                    {
+                      order.instructions && <Card.Text><b>Instructions:</b> {order.instructions}</Card.Text>
+                    }
                     <ListGroup variant="flush">
                       {order?.order_items.map((item) => (
                         <ListGroup.Item key={item.id}>

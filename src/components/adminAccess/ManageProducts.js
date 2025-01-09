@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Accordion, Card, Button, Form, Alert } from 'react-bootstrap';
+import { RiDeleteBinLine } from "react-icons/ri";
 import AWS from 'aws-sdk';
 
 const ManageProducts = (props) => {
@@ -88,7 +89,7 @@ const ManageProducts = (props) => {
     if (!formData && !newItemForm) return;
 
     const data = isNewItem
-      ? { ...newItemForm, category_id: categories.find(cat => cat.name === newItemForm.category).id }
+      ? { ...newItemForm, category_id: categories.find(cat => (cat.name === newItemForm.category && cat.location === newItemForm.location)).id }
       : formData;
 
     const apiPath = isNewItem ? "/post/items" : "/put/items";
@@ -214,6 +215,15 @@ const ManageProducts = (props) => {
     isNewItem ? setNewItemForm(updatedData) : setFormData(updatedData);
   };
 
+  const handleDeletePriceDetail = (index, isNewItem) => {
+    const data = isNewItem ? newItemForm : formData;
+    const updatedData = {
+      ...data,
+      price_details: data.price_details.filter((_, i) => i !== index),
+    };
+    isNewItem ? setNewItemForm(updatedData) : setFormData(updatedData);
+  };
+
   const handleImageChange = (e) => {
     setImageFile(e.target.files[0]);
   };
@@ -223,104 +233,105 @@ const ManageProducts = (props) => {
     if (!data) return null;
 
     return (
-        <Form>
-            <Form.Group>
-                <Form.Select
-                    name="location"
-                    value={data.location}
-                    onChange={(e) => handleFormChange(e, isNewItem)}
-                >
-                    <option value="">Location</option>
-                    {locations.map(loc => (<option key={loc.id} value={loc.name}>{loc.name}</option>))}
-                </Form.Select>
-            </Form.Group>
-            <Form.Group className='mt-3 mb-3'>
-                <Form.Select
-                    name="category"
-                    value={data.category}
-                    onChange={(e) => handleFormChange(e, isNewItem)}
-                >
-                    <option value="">Category</option>
-                    {categories.filter(cat => cat.location === data.location).map(cat => (<option key={cat.id} value={cat.name}>{cat.name}</option>))}
-                </Form.Select>
-            </Form.Group>
-            <Form.Group>
-      <Form.Label>Name</Form.Label>
-      <Form.Control
-        type="text"
-        name="name"
-        value={data.name}
-        onChange={(e) => handleFormChange(e, isNewItem)}
-      />
-    </Form.Group>
-    <Form.Group>
-      <Form.Label>Description</Form.Label>
-      <Form.Control
-        type="text"
-        name="description"
-        value={data.description}
-        onChange={(e) => handleFormChange(e, isNewItem)}
-      />
-    </Form.Group>
-    <Form.Group>
-      <Form.Select
-      name="stock"
-      value={data.stock}
-      onChange={(e) => handleFormChange(e, isNewItem)}
-    >
-      <option value="">Stock</option>
-      <option value="in-stock">In-stock</option>
-      <option value="out-of-stock">Out-of-stock</option>
-    </Form.Select>
-    </Form.Group>
-    <Form.Group className='d-flex1 gap-2'>
-      <Form.Check
-        type="checkbox"
-        name="popular_item"
-        checked={data.popular_item || false}
-        onChange={(e) => handleFormChange(e, isNewItem)}
-      />
-      <Form.Label>Popular Item</Form.Label>
-    </Form.Group>
-    <Form.Group className='d-flex1 gap-2'>
-      <Form.Check
-        type="checkbox"
-        name="new_arrival"
-        checked={data.new_arrival || false}
-        onChange={(e) => handleFormChange(e, isNewItem)}
-      />
-      <Form.Label>New Arrival</Form.Label>
-    </Form.Group>
-    <Form.Group>
-      <Form.Label>Price Details</Form.Label>
-      {data.price_details.map((priceDetail, index) => (
-        <div className='d-flex gap-3' key={index}>
-          <Form.Label>Quantity</Form.Label>
+      <Form>
+        <Form.Group>
+          <Form.Select
+            name="location"
+            value={data.location}
+            onChange={(e) => handleFormChange(e, isNewItem)}
+          >
+            <option value="">Location</option>
+            {locations.map(loc => (<option key={loc.id} value={loc.name}>{loc.name}</option>))}
+          </Form.Select>
+        </Form.Group>
+        <Form.Group className='mt-3 mb-3'>
+          <Form.Select
+            name="category"
+            value={data.category}
+            onChange={(e) => handleFormChange(e, isNewItem)}
+          >
+            <option value="">Category</option>
+            {categories.filter(cat => cat.location === data.location).map(cat => (<option key={cat.id} value={cat.name}>{cat.name}</option>))}
+          </Form.Select>
+        </Form.Group>
+        <Form.Group>
+          <Form.Label>Name</Form.Label>
           <Form.Control
             type="text"
-            name="quantity"
-            value={priceDetail.quantity}
-            label="Quantity"
-            onChange={(e) => handlePriceChange(index, 'quantity', e.target.value, isNewItem)}
+            name="name"
+            value={data.name}
+            onChange={(e) => handleFormChange(e, isNewItem)}
           />
-          <Form.Label>Price</Form.Label>
+        </Form.Group>
+        <Form.Group>
+          <Form.Label>Description</Form.Label>
           <Form.Control
-            type="number"
-            name="amount"
-            label="Price"
-            value={priceDetail.amount}
-            onChange={(e) => handlePriceChange(index, 'amount', e.target.value, isNewItem)}
+            type="text"
+            name="description"
+            value={data.description}
+            onChange={(e) => handleFormChange(e, isNewItem)}
           />
-        </div>
-      ))}
-      <Button
-        variant="secondary"
-        onClick={() => handleAddPriceDetail(isNewItem)}
-        className="mt-2"
-      >
-        Add Quantity
-      </Button>
-    </Form.Group>
+        </Form.Group>
+        <Form.Group>
+          <Form.Select
+            name="stock"
+            value={data.stock}
+            onChange={(e) => handleFormChange(e, isNewItem)}
+          >
+            <option value="">Stock</option>
+            <option value="in-stock">In-stock</option>
+            <option value="out-of-stock">Out-of-stock</option>
+          </Form.Select>
+        </Form.Group>
+        <Form.Group className='d-flex1 gap-2'>
+          <Form.Check
+            type="checkbox"
+            name="popular_item"
+            checked={data.popular_item || false}
+            onChange={(e) => handleFormChange(e, isNewItem)}
+          />
+          <Form.Label>Popular Item</Form.Label>
+        </Form.Group>
+        <Form.Group className='d-flex1 gap-2'>
+          <Form.Check
+            type="checkbox"
+            name="new_arrival"
+            checked={data.new_arrival || false}
+            onChange={(e) => handleFormChange(e, isNewItem)}
+          />
+          <Form.Label>New Arrival</Form.Label>
+        </Form.Group>
+        <Form.Group>
+          <Form.Label>Price Details</Form.Label>
+          {data.price_details.map((priceDetail, index) => (
+            <div className='d-flex gap-3' key={index}>
+              <Form.Label>Quantity</Form.Label>
+              <Form.Control
+                type="text"
+                name="quantity"
+                value={priceDetail.quantity}
+                label="Quantity"
+                onChange={(e) => handlePriceChange(index, 'quantity', e.target.value, isNewItem)}
+              />
+              <Form.Label>Price</Form.Label>
+              <Form.Control
+                type="number"
+                name="amount"
+                label="Price"
+                value={priceDetail.amount}
+                onChange={(e) => handlePriceChange(index, 'amount', e.target.value, isNewItem)}
+              />
+              <RiDeleteBinLine style={{width: '70px', height: '25px', cursor: 'pointer'}} onClick={() => handleDeletePriceDetail(index, isNewItem)} />
+            </div>
+          ))}
+          <Button
+            variant="secondary"
+            onClick={() => handleAddPriceDetail(isNewItem)}
+            className="mt-2"
+          >
+            Add Quantity
+          </Button>
+        </Form.Group>
         <Form.Group>
           <Form.Label>Upload Image</Form.Label>
           <Form.Control
@@ -331,12 +342,12 @@ const ManageProducts = (props) => {
         <Button variant="primary" onClick={() => handleSave(isNewItem)}>
           Save
         </Button>
-            </Form>
+      </Form>
     );
-};
+  };
 
 
-  const groupedItems = items.reduce((acc, item) => {    
+  const groupedItems = items.reduce((acc, item) => {
     const location = item.location;
     const category = item.category;
 
@@ -354,66 +365,66 @@ const ManageProducts = (props) => {
 
   return (
     <><div>
-    <nav aria-label="breadcrumb" className="breadcrumb-container">
-    <ol className="breadcrumb d-flex">
-      <li className="breadcrumb-item active" aria-current="page" onClick={() => props.setActivePage('admin')}>
-        / Admin
-      </li>
-      <li className="breadcrumb-item active breadcrumb-secondary" aria-current="page">
-        Manage Products
-      </li>
-    </ol>
-  </nav>
-  <Button onClick={() => setNewItemForm({ name: '', description: '', price_details: [{ quantity: '', amount: '' }], stock: 'in-stock', popular_item: false, new_arrival: false, category: '', location: '' })}>
-    Add New Item
-  </Button>
-  {newItemForm && renderProductForm(true)}
-    <Accordion>
-      {Object.keys(groupedItems).map((location) => (
-        <Accordion.Item eventKey={location} key={location}>
-          <Accordion.Header>{location}</Accordion.Header>
-          <Accordion.Body>
-            <Accordion>
-              {Object.keys(groupedItems[location]).map((category) => (
-                <Accordion.Item eventKey={category} key={category}>
-                  <Accordion.Header>{category}</Accordion.Header>
-                  <Accordion.Body>
-                    {groupedItems[location][category].map(item => (
-                      <Card key={item.id}>
-                        {
-                          editingItem === item.id ? (
-                            renderProductForm()
-                          ) : <><Card.Img variant="top" src={item.image_url} />
-                          <Card.Body>
-                            <Card.Title>{item.name}</Card.Title>
-                            <Card.Text>{item.description}</Card.Text>
-                            <Card.Text>Stock: {item.stock}</Card.Text>
-                            {item.price_details.map((priceDetail, index) => (
-                              <Card.Text key={index}>
-                                Price for {priceDetail.quantity}: {priceDetail.amount}
-                              </Card.Text>
-                            ))}
-                            <Button onClick={() => { setEditingItem(item.id); setFormData(item); }}>Edit</Button>
-                            <Button variant="danger" onClick={() => handleDelete(item.id)}>Delete</Button>
-                          </Card.Body></>
-                        }
-                        
-                      </Card>
-                    ))}
-                  </Accordion.Body>
-                </Accordion.Item>
-              ))}
-            </Accordion>
-          </Accordion.Body>
-        </Accordion.Item>
-      ))}
-    </Accordion>
-  </div>
-  {
-    (alertMessage && show) ? <Alert className='alertMsg' variant={alertType} dismissible onClose={() => setShow(false)}>
-        <p>{alertMessage}</p>
-      </Alert> : null
-  }</>
+      <nav aria-label="breadcrumb" className="breadcrumb-container">
+        <ol className="breadcrumb d-flex">
+          <li className="breadcrumb-item active" aria-current="page" onClick={() => props.setActivePage('admin')}>
+            / Admin
+          </li>
+          <li className="breadcrumb-item active breadcrumb-secondary" aria-current="page">
+            Manage Products
+          </li>
+        </ol>
+      </nav>
+      <Button onClick={() => setNewItemForm({ name: '', description: '', price_details: [{ quantity: '', amount: '' }], stock: 'in-stock', popular_item: false, new_arrival: false, category: '', location: '' })}>
+        Add New Item
+      </Button>
+      {newItemForm && renderProductForm(true)}
+      <Accordion>
+        {Object.keys(groupedItems).map((location) => (
+          <Accordion.Item eventKey={location} key={location}>
+            <Accordion.Header>{location}</Accordion.Header>
+            <Accordion.Body>
+              <Accordion>
+                {Object.keys(groupedItems[location]).map((category) => (
+                  <Accordion.Item eventKey={category} key={category}>
+                    <Accordion.Header>{category}</Accordion.Header>
+                    <Accordion.Body>
+                      {groupedItems[location][category].map(item => (
+                        <Card key={item.id}>
+                          {
+                            editingItem === item.id ? (
+                              renderProductForm()
+                            ) : <><Card.Img variant="top" src={item.image_url} />
+                              <Card.Body>
+                                <Card.Title>{item.name}</Card.Title>
+                                <Card.Text>{item.description}</Card.Text>
+                                <Card.Text>Stock: {item.stock}</Card.Text>
+                                {item.price_details.map((priceDetail, index) => (
+                                  <Card.Text key={index}>
+                                    Price for {priceDetail.quantity}: {priceDetail.amount}
+                                  </Card.Text>
+                                ))}
+                                <Button onClick={() => { setEditingItem(item.id); setFormData(item); }}>Edit</Button>
+                                <Button variant="danger" onClick={() => handleDelete(item.id)}>Delete</Button>
+                              </Card.Body></>
+                          }
+
+                        </Card>
+                      ))}
+                    </Accordion.Body>
+                  </Accordion.Item>
+                ))}
+              </Accordion>
+            </Accordion.Body>
+          </Accordion.Item>
+        ))}
+      </Accordion>
+    </div>
+      {
+        (alertMessage && show) ? <Alert className='alertMsg' variant={alertType} dismissible onClose={() => setShow(false)}>
+          <p>{alertMessage}</p>
+        </Alert> : null
+      }</>
   );
 };
 

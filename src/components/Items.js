@@ -8,6 +8,7 @@ export default function Items({ activeTab, categoryId, setCartNumber, cartNumber
     const [wishlistItems, setWishlistItems] = useState([]);
     const [isLoading, setLoading] = useState(true);    
     const [appStatus, setAppStatus] = useState('ON');
+    const [showPopup, setShowPopup] = useState(false);
 
     useEffect(() => {
         async function fetchData() {
@@ -112,23 +113,31 @@ export default function Items({ activeTab, categoryId, setCartNumber, cartNumber
     const handleAddToCart = async (itemId) => {
         const item = items.find(item => item.id === itemId);
         const selectedPriceDetail = item.price_details.find(detail => detail.quantity === item.selectedQuantity) || item.price_details[0];
-
+  
         const cartItem = {
             user_id: localStorage.getItem('userID'),
             item_id: itemId,
             quantity: 1, 
             amount: selectedPriceDetail.amount,
-            product_quantity: item.selectedQuantity,
-            path: "/post/cart"
+            product_quantity: selectedPriceDetail.quantity,
+            path: "/post/cart",
+            location: localStorage.getItem('userCity')
         };
 
-        await fetch(`https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/`, {
+        let addRes = await fetch(`https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
             },
             body: JSON.stringify(cartItem)
         });
+        let addData = await addRes.json();
+        addData = JSON.parse(addData.body);
+        if(addData.error) {
+            setShowPopup(true);
+            localStorage.setItem('replacableItem', JSON.stringify(cartItem));
+            return;
+        }
         let newCartItems = { ...cartItems, [itemId]: 1 };
         setCartItems(newCartItems);
         setCartNumber(Object.values(newCartItems).reduce((sum, item) => sum + item, 0));
@@ -149,9 +158,9 @@ export default function Items({ activeTab, categoryId, setCartNumber, cartNumber
             body: JSON.stringify({ 
                 quantity: newQuantity, 
                 amount: selectedPriceDetail.amount, 
-                product_quantity: item.selectedQuantity,
+                product_quantity: selectedPriceDetail.quantity,
                 user_id: localStorage.getItem('userID'), 
-                id: itemId, 
+                itemId: itemId, 
                 path: "/put/cart" 
             })
         });
@@ -178,8 +187,9 @@ export default function Items({ activeTab, categoryId, setCartNumber, cartNumber
                     path: "/put/cart", 
                     quantity: newQuantity, 
                     amount: selectedPriceDetail.amount, 
-                    product_quantity: item.selectedQuantity,
-                    user_id: localStorage.getItem('userID') 
+                    product_quantity: selectedPriceDetail.quantity,
+                    user_id: localStorage.getItem('userID') ,
+                    itemId: itemId
                 })
             });
             let newCartItems = { ...cartItems, [itemId]: newQuantity };
@@ -222,6 +232,29 @@ export default function Items({ activeTab, categoryId, setCartNumber, cartNumber
         }
     }
 
+    const handleClearAndAddToCart = async () => {
+        setShowPopup(false)
+        const cartItem = JSON.parse(localStorage.getItem('replacableItem'));
+        cartItem.path = "/clear/post/cart";
+
+        let addRes = await fetch(`https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(cartItem)
+        });
+
+        let addData = await addRes.json();
+        addData = JSON.parse(addData.body);
+        if(addData.error) {
+            return;
+        }
+        let newCartItems = { [cartItem.item_id]: 1 };
+        setCartItems(newCartItems);
+        setCartNumber(Object.values(newCartItems).reduce((sum, item) => sum + item, 0));
+    }
+
     return (
         !isLoading ? (<div className="items-container">
             {items.length ? items.map(item => {
@@ -229,7 +262,8 @@ export default function Items({ activeTab, categoryId, setCartNumber, cartNumber
                 const cartQuantity = cartItems[item.id] || 0;
 
                 return (
-                    <div key={item.id} className="item-card">
+                    <>
+                        <div key={item.id} className="item-card">
                         <div className="item-image">
                             {item.popular_item && item.new_arrival ? (
                                 <div className="item-flag flag-recommended">Recommended</div>
@@ -282,6 +316,20 @@ export default function Items({ activeTab, categoryId, setCartNumber, cartNumber
                             )}
                         </div>
                     </div>
+                    {
+                        showPopup ? <div className="popup-container">
+                            <div className="popup">
+                                <div className="popup-content bg-white p-3 m-3">
+                                    <p style={{fontSize: '12px', textAlign: 'center'}}>You cannot purchase this item with the items currently in your cart. Would you like to clear your cart and add this instead?</p>
+                                    <div className='d-flex justify-content-center'>
+                                        <button className="btn btn-success" onClick={handleClearAndAddToCart}>Yes</button>
+                                        <button className="btn btn-warning" onClick={() => setShowPopup(false)}>No</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div> : null
+                    }
+                    </>
                 );
             }): <Alert>No items found</Alert>}
             {

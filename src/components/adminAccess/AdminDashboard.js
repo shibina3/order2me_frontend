@@ -23,6 +23,7 @@ const AdminDashboard = (props) => {
             <Nav.Link onClick={() => { setPage('manage-orders');}} className="bouncy-button">Manage Orders</Nav.Link>
             <Nav.Link onClick={() => { setPage('manage-categories');}} className="bouncy-button">Manage Categories</Nav.Link>
             <Nav.Link onClick={() => { setPage('manage-products');}} className="bouncy-button">Manage Products</Nav.Link>
+            <Nav.Link onClick={() => { setPage('club_categories');}} className="bouncy-button">Club Categories</Nav.Link>
             <Nav.Link onClick={() => { setPage('time_slots');}} className="bouncy-button">Manage Time Slots</Nav.Link>
             <Nav.Link onClick={() => { setPage('manage-delivery-charges');}} className="bouncy-button">Manage Delivery Charges</Nav.Link>
             <Nav.Link onClick={() => { setPage('manage-locations');}} className="bouncy-button">Manage Locations</Nav.Link>

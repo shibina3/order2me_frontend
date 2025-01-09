@@ -15,6 +15,15 @@ const ManageCategories = (props) => {
   const [show, setShow] = useState(true);
   const [location, setLocation] = useState('');
   const [locations, setLocations] = useState([]);
+  const [categoryIdToEdit, setCategoryIdToEdit] = useState(null);
+  const [editForm, setEditForm] = useState({
+    name: '',
+    description: '',
+    image_url: '',
+    location: '',
+    order: null,
+    hide: false,
+  });
 
   useEffect(() => {
     setLoading(true);
@@ -123,6 +132,24 @@ const ManageCategories = (props) => {
     setShow(true);
   };
 
+  const handleEditCategory = async (id) => {
+    const editCategoryRes = await fetch(`https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ id: id, path: "/put/categories", name: editForm.name, description: editForm.description, image_url: editForm.image_url, location: editForm.location, order: editForm.order, hide: editForm.hide }),
+    });
+    let editCategoryData = await editCategoryRes.json();
+    if (editCategoryData.message === "Category Edited") {
+      fetchCategories();
+      setCategoryIdToEdit(null);
+      setAlertType('success');
+      setAlertMessage(`Category updated successfully`);
+      setShow(true);
+    }
+  }
+
   const handleDeleteCategory = async (id) => {
     const deleteCategoryRes = await fetch(`https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/`, {
       method: 'POST',
@@ -139,6 +166,23 @@ const ManageCategories = (props) => {
       setShow(true);
     }
   };
+
+  const handleHideUnhideCategory = async (id, hide) => {
+    const hideUnhideCategoryRes = await fetch(`https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ id: id, hide: hide, path: "/hideOrUnhide/categories" }),
+    });
+    let hideUnhideCategoryData = await hideUnhideCategoryRes.json();
+    if (hideUnhideCategoryData.message === "Done") {
+      fetchCategories();
+      setAlertType('success');
+      setAlertMessage(`Category ${hide ? 'hidden' : 'unhidden'} successfully`);
+      setShow(true);
+    }
+  }
 
   const handleReorderCategories = async (locationKey, reorderedCategories) => {
     const updatedCategories = reorderedCategories.map((category, index) => ({
@@ -263,14 +307,71 @@ const ManageCategories = (props) => {
                                 {...provided.dragHandleProps}
                                 className="d-flex justify-content-between align-items-center"
                               >
-                                <div>
+                                {
+                                  categoryIdToEdit === category.id ? (
+                                    <div>
+                                      <InputGroup className="mb-3">
+                                        <Form.Control
+                                          type="text"
+                                          placeholder="Enter category name"
+                                          value={editForm.name}
+                                          onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                                        />
+                                      </InputGroup>
+                                      <InputGroup className="mb-3">
+                                        <Form.Control
+                                          as="textarea"
+                                          rows={3}
+                                          placeholder="Enter category description"
+                                          value={editForm.description}
+                                          onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
+                                        />
+                                      </InputGroup>
+                                      <InputGroup className="mb-3">
+                                        <Form.Control
+                                          type="file"
+                                          onChange={async (e) => {
+                                            let uploadtoS3 = await uploadImageToS3(e.target.files[0]);
+                                            setEditForm({ ...editForm, image_url: uploadtoS3.Location });
+                                          }}
+                                        />
+                                      </InputGroup>
+                                      <Button variant="success" onClick={() => handleEditCategory(category.id)}>
+                                        Save
+                                      </Button>
+                                      <Button variant="danger" onClick={() => setCategoryIdToEdit(null)}>
+                                        Cancel
+                                      </Button>
+                                    </div>
+                                  ) : <><div>
                                   <h5>{category.name}</h5>
                                   <p>{category.description}</p>
                                   {category.image_url && <img src={category.image_url} alt={category.name} style={{ width: '100px' }} />}
                                 </div>
+                                <div>
+                                <div className='d-flex'>
+                                <Button variant="warning" onClick={() => {
+                                  setCategoryIdToEdit(category.id);
+                                  
+                                  setEditForm({
+                                    name: categories[category.location].find((cat) => cat.id === category.id).name,
+                                    description: categories[category.location].find((cat) => cat.id === category.id).description,
+                                    image_url: categories[category.location].find((cat) => cat.id === category.id).image_url,
+                                    location: category.location,
+                                    order: category.order,
+                                    hide: category.hide,
+                                  });
+                                }}>Edit</Button>
                                 <Button variant="danger" onClick={() => handleDeleteCategory(category.id)}>
                                   Delete
                                 </Button>
+                                </div>
+                                <Button variant="primary" onClick={() => {
+                                  handleHideUnhideCategory(category.id, !category.hide);
+                                }}>{ category.hide ? 'Unhide' : 'Hide' }</Button>
+                                </div>
+                                </>
+                                }
                               </ListGroup.Item>
                             )}
                           </Draggable>

@@ -2,7 +2,7 @@ import React, { useRef, useState, useEffect } from 'react';
 import { Carousel, Card, Button } from 'react-bootstrap';
 import { FaArrowLeft, FaArrowRight, FaFacebook, FaInstagram, FaWhatsapp, FaRegHeart, FaHeart, FaRegArrowAltCircleRight } from 'react-icons/fa';
 
-const HomePage = ({setActiveTab, setCategoryId, setCartNumber, cartNumber, setActivePage}) => {
+const HomePage = ({ setActiveTab, setCategoryId, setCartNumber, cartNumber, setActivePage }) => {
   const [popularItems, setPopularItems] = useState([]);
   const [categories, setCategories] = useState([]);
   const [newArrivals, setNewArrivals] = useState([]);
@@ -12,9 +12,10 @@ const HomePage = ({setActiveTab, setCategoryId, setCartNumber, cartNumber, setAc
   const [details, setDetails] = useState([]);
   const [appStatus, setAppStatus] = useState('ON');
   const [selectedQuantities, setSelectedQuantities] = useState({});
+  const [showPopup, setShowPopup] = useState(false);
 
   useEffect(() => {
-    async function fetchData() {      
+    async function fetchData() {
       // Fetch all items
       const allItemsRes = await fetch("https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/", {
         method: 'POST',
@@ -22,7 +23,7 @@ const HomePage = ({setActiveTab, setCategoryId, setCartNumber, cartNumber, setAc
           'Content-Type': 'application/json',
           'Accept': 'application/json',
         },
-        body: JSON.stringify({path: "/get/items"})
+        body: JSON.stringify({ path: "/get/items" })
       });
       let allItems = await allItemsRes.json();
       allItems = JSON.parse(allItems.body);
@@ -40,7 +41,7 @@ const HomePage = ({setActiveTab, setCategoryId, setCartNumber, cartNumber, setAc
           'Content-Type': 'application/json',
           'Accept': 'application/json',
         },
-        body: JSON.stringify({path: "/get/categories"})
+        body: JSON.stringify({ path: "/get/categories" })
       });
       let allCategories = await allCategoriesRes.json();
       setAppStatus(allCategories.app_status);
@@ -56,12 +57,12 @@ const HomePage = ({setActiveTab, setCategoryId, setCartNumber, cartNumber, setAc
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({path: "/get/cart", userId: localStorage.getItem('userID')})
+        body: JSON.stringify({ path: "/get/cart", userId: localStorage.getItem('userID') })
       });
       let cartData = await cartRes.json();
       cartData = JSON.parse(cartData.body);
       setCartNumber(cartData.reduce((sum, item) => sum + item.quantity, 0));
-      
+
       const cartItemsMap = cartData.reduce((acc, item) => {
         acc[item.item_id] = item.quantity;
         return acc;
@@ -74,7 +75,7 @@ const HomePage = ({setActiveTab, setCategoryId, setCartNumber, cartNumber, setAc
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({path: "/contact/details"})
+        body: JSON.stringify({ path: "/contact/details" })
       });
       let contactDetData = await contactDetRes.json();
       contactDetData = JSON.parse(contactDetData.body);
@@ -86,25 +87,25 @@ const HomePage = ({setActiveTab, setCategoryId, setCartNumber, cartNumber, setAc
   }, [setCartNumber]);
 
   useEffect(() => {
-    const fetchWishlist = async() => {
+    const fetchWishlist = async () => {
 
-        const allWishlistItemRes = await fetch(`https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                user_id: localStorage.getItem('userID'),
-                path: "/get/wishlist"
-            })
-        });
-        let allWishlistItems = await allWishlistItemRes.json();
-        allWishlistItems = JSON.parse(allWishlistItems.body);
-        allWishlistItems = allWishlistItems.length ? allWishlistItems.map(wish => wish.id) : [];        
-        setWishlistItems(allWishlistItems);
+      const allWishlistItemRes = await fetch(`https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          user_id: localStorage.getItem('userID'),
+          path: "/get/wishlist"
+        })
+      });
+      let allWishlistItems = await allWishlistItemRes.json();
+      allWishlistItems = JSON.parse(allWishlistItems.body);
+      allWishlistItems = allWishlistItems.length ? allWishlistItems.map(wish => wish.id) : [];
+      setWishlistItems(allWishlistItems);
     }
     fetchWishlist();
-  },[]);
+  }, []);
 
   const popularRef = useRef(null);
   const categoriesRef = useRef(null);
@@ -133,7 +134,7 @@ const HomePage = ({setActiveTab, setCategoryId, setCartNumber, cartNumber, setAc
         quantity: newQuantity,
         amount: selectedPriceDetail.amount,
         user_id: localStorage.getItem('userID'),
-        product_quantity: item.selectedQuantity,
+        product_quantity: selectedPriceDetail.quantity,
         itemId: itemId,
         path: "/put/cart"
       })
@@ -161,7 +162,7 @@ const HomePage = ({setActiveTab, setCategoryId, setCartNumber, cartNumber, setAc
           quantity: newQuantity,
           amount: selectedPriceDetail.amount,
           user_id: localStorage.getItem('userID'),
-          product_quantity: item.selectedQuantity,
+          product_quantity: selectedPriceDetail.quantity,
           itemId: itemId,
           path: "/put/cart"
         })
@@ -175,8 +176,10 @@ const HomePage = ({setActiveTab, setCategoryId, setCartNumber, cartNumber, setAc
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ user_id: localStorage.getItem('userID'), id: itemId,
-          path: "/delete/cart" })
+        body: JSON.stringify({
+          user_id: localStorage.getItem('userID'), id: itemId,
+          path: "/delete/cart"
+        })
       });
       const updatedCartItems = { ...cartItems };
       delete updatedCartItems[itemId];
@@ -187,33 +190,65 @@ const HomePage = ({setActiveTab, setCategoryId, setCartNumber, cartNumber, setAc
 
   const handleAddToCart = async (itemId) => {
     console.log("selectedQuantities", selectedQuantities, itemId);
-    
+
     const item = [...popularItems, ...newArrivals].find(item => item.id === itemId);
     item.selectedQuantity = selectedQuantities[itemId] ? item.price_details[selectedQuantities[itemId]].quantity : item.price_details[0].quantity;
-    
+
     const selectedPriceDetail = item.price_details.find(detail => detail.quantity === item.selectedQuantity) || item.price_details[0];
+    console.log("item.price_details", item.price_details, selectedPriceDetail);
 
     const cartItem = {
       user_id: localStorage.getItem('userID'),
       item_id: itemId,
       quantity: 1,
       amount: selectedPriceDetail.amount,
-      product_quantity: item.selectedQuantity,
-      path: "/post/cart"
-    };    
+      product_quantity: selectedPriceDetail.quantity,
+      path: "/post/cart",
+      location: localStorage.getItem('userCity')
+    };
 
-    await fetch(`https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/`, {
+    let addRes = await fetch(`https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(cartItem)
     });
+    let addData = await addRes.json();
+    addData = JSON.parse(addData.body);
+    if (addData.error) {
+      setShowPopup(true);
+      localStorage.setItem('replacableItem', JSON.stringify(cartItem));
+      return;
+    }
+
     let newCartItems = { ...cartItems, [itemId]: 1 };
     setCartItems(newCartItems);
     setCartNumber(Object.values(newCartItems).reduce((sum, item) => sum + item, 0));
   };
 
+  const handleClearAndAddToCart = async () => {
+    setShowPopup(false)
+    const cartItem = JSON.parse(localStorage.getItem('replacableItem'));
+    cartItem.path = "/clear/post/cart";
+
+    let addRes = await fetch(`https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(cartItem)
+    });
+
+    let addData = await addRes.json();
+    addData = JSON.parse(addData.body);
+    if(addData.error) {
+        return;
+    }
+    let newCartItems = { [cartItem.item_id]: 1 };
+    setCartItems(newCartItems);
+    setCartNumber(Object.values(newCartItems).reduce((sum, item) => sum + item, 0));
+  }
   const renderItemControls = (id) => (
     <div className="d-flex align-items-center">
       {cartItems[id] > 0 ? (
@@ -230,25 +265,25 @@ const HomePage = ({setActiveTab, setCategoryId, setCartNumber, cartNumber, setAc
 
   const handleAddRemoveWishist = async (itemId, wishlistFlag) => {
     const payload = {
-        user_id: localStorage.getItem('userID'),
-        item_id: itemId,
-        path: wishlistFlag ? "/add/wishlist" : "/delete/wishlist"
+      user_id: localStorage.getItem('userID'),
+      item_id: itemId,
+      path: wishlistFlag ? "/add/wishlist" : "/delete/wishlist"
     };
 
     await fetch(`https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload)
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload)
     });
 
     if (wishlistFlag) {
-        setWishlistItems((prev) => [...prev, itemId]);
+      setWishlistItems((prev) => [...prev, itemId]);
     } else {
-        setWishlistItems((prev) => prev.filter(wish => wish !== itemId));
+      setWishlistItems((prev) => prev.filter(wish => wish !== itemId));
     }
-  }  
+  }
 
   const handleQuantityChange = (itemId, quantityIndex) => {
     setSelectedQuantities(prevState => ({
@@ -266,6 +301,19 @@ const HomePage = ({setActiveTab, setCategoryId, setCartNumber, cartNumber, setAc
         </div> : <div className="timings-banner-off text-center text-danger my-3">
           <p>We are not currently accepting any orders!</p>
         </div>
+      }
+      {
+          showPopup ? <div className="popup-container">
+              <div className="popup">
+                  <div className="popup-content bg-white p-3 m-3">
+                      <p style={{fontSize: '12px', textAlign: 'center'}}>You cannot purchase this item with the items currently in your cart. Would you like to clear your cart and add this instead?</p>
+                      <div className='d-flex justify-content-center'>
+                          <button className="btn btn-success" onClick={handleClearAndAddToCart}>Yes</button>
+                          <button className="btn btn-warning" onClick={() => setShowPopup(false)}>No</button>
+                      </div>
+                  </div>
+              </div>
+          </div> : null
       }
 
       {/* Banner for Offer Image */}
@@ -285,54 +333,54 @@ const HomePage = ({setActiveTab, setCategoryId, setCartNumber, cartNumber, setAc
       <div className="popular-items my-4">
         <div className="d-flex justify-content-between align-items-center">
           <h3>Most Popular Items</h3>
-          <Button variant="link" onClick={()=> setActiveTab('Popular Items')}>See All</Button>
+          <Button variant="link" onClick={() => setActiveTab('Popular Items')}>See All</Button>
         </div>
         <div className="carousel-container position-relative">
           <button className="carousel-control carousel-control-left" onClick={() => handleScroll('left', popularRef)} disabled={!popularItems.length}>
             <FaArrowLeft />
           </button>
           <div className="carousel-content" ref={popularRef}>
-          { 
-            popularItems.length ? (
-              popularItems.map((item, index) => {
-                const selectedQuantityIndex = selectedQuantities[item.id] || 0;
-                const selectedPriceDetail = item.price_details[selectedQuantityIndex];
+            {
+              popularItems.length ? (
+                popularItems.map((item, index) => {
+                  const selectedQuantityIndex = selectedQuantities[item.id] || 0;
+                  const selectedPriceDetail = item.price_details[selectedQuantityIndex];
 
-                return (
-                  <Card key={index} style={{ width: '18rem', marginRight: '15px', height: '80%' }} className="d-inline-block carousel-item">
-                    <Card.Img variant="top" className="cardImage" src={item.image_url} />
-                    <Card.Body>
-                      <Card.Title>
-                        <span className='carousel-item-name'>{item.name}</span>
-                        {
-                          wishlistItems.includes(item.id) ? 
-                          <span className='items-wishlist wishlisted'>
-                            <FaHeart onClick={() => handleAddRemoveWishist(item.id, false)} />
-                          </span> : 
-                          <span className='items-wishlist not-wishlisted'>
-                            <FaRegHeart onClick={() => handleAddRemoveWishist(item.id, true)} />
-                          </span>
-                        }
-                      </Card.Title>
-                      <Card.Text className='d-flex justify-content-between carousel-item-desc'>
-                        ₹ {selectedPriceDetail.amount} 
-                        <select onChange={(e) => handleQuantityChange(item.id, e.target.value)} value={selectedQuantityIndex}>
-                          {item.price_details.map((priceDetail, idx) => (
-                            <option key={idx} value={idx}>{priceDetail.quantity}</option>
-                          ))}
-                        </select>
-                        {item.stock === 'out-of-stock' ? 
-                          <div className='m-3 text-danger'><span>Out of stock</span></div> : 
-                          renderItemControls(item.id)
-                        }
-                      </Card.Text>
-                    </Card.Body>
-                  </Card>
-                );
-              })
-            ) : 
-            <p>No popular items available.</p>
-          }
+                  return (
+                    <Card key={index} style={{ width: '18rem', marginRight: '15px', height: '80%' }} className="d-inline-block carousel-item">
+                      <Card.Img variant="top" className="cardImage" src={item.image_url} />
+                      <Card.Body>
+                        <Card.Title>
+                          <span className='carousel-item-name'>{item.name}</span>
+                          {
+                            wishlistItems.includes(item.id) ?
+                              <span className='items-wishlist wishlisted'>
+                                <FaHeart onClick={() => handleAddRemoveWishist(item.id, false)} />
+                              </span> :
+                              <span className='items-wishlist not-wishlisted'>
+                                <FaRegHeart onClick={() => handleAddRemoveWishist(item.id, true)} />
+                              </span>
+                          }
+                        </Card.Title>
+                        <Card.Text className='d-flex justify-content-between carousel-item-desc'>
+                          ₹ {selectedPriceDetail.amount}
+                          <select onChange={(e) => handleQuantityChange(item.id, e.target.value)} value={selectedQuantityIndex}>
+                            {item.price_details.map((priceDetail, idx) => (
+                              <option key={idx} value={idx}>{priceDetail.quantity}</option>
+                            ))}
+                          </select>
+                          {item.stock === 'out-of-stock' ?
+                            <div className='m-3 text-danger'><span>Out of stock</span></div> :
+                            renderItemControls(item.id)
+                          }
+                        </Card.Text>
+                      </Card.Body>
+                    </Card>
+                  );
+                })
+              ) :
+                <p>No popular items available.</p>
+            }
           </div>
           <button className="carousel-control carousel-control-right" onClick={() => handleScroll('right', popularRef)} disabled={!popularItems.length}>
             <FaArrowRight />
@@ -354,7 +402,7 @@ const HomePage = ({setActiveTab, setCategoryId, setCartNumber, cartNumber, setAc
           <div className="carousel-content" ref={categoriesRef}>
             {categories.length ? (
               categories.map((category, index) => (
-                <Card key={index} onClick={()=> {
+                <Card key={index} onClick={() => {
                   setActiveTab(category.name);
                   setCategoryId(category.id);
                 }} style={{ width: '18rem', marginRight: '15px' }} className="d-inline-block carousel-item">
@@ -387,55 +435,55 @@ const HomePage = ({setActiveTab, setCategoryId, setCartNumber, cartNumber, setAc
       <div className="new-arrivals my-4">
         <div className="d-flex justify-content-between align-items-center">
           <h3>New Arrivals</h3>
-          <Button variant="link" onClick={()=> setActiveTab('New Arrivals')}>See All</Button>
+          <Button variant="link" onClick={() => setActiveTab('New Arrivals')}>See All</Button>
         </div>
         <div className="carousel-container position-relative">
           <button className="carousel-control carousel-control-left" onClick={() => handleScroll('left', newArrivalsRef)} disabled={!newArrivals.length}>
             <FaArrowLeft />
           </button>
           <div className="carousel-content" ref={newArrivalsRef}>
-          {
-            newArrivals.length ? (
-              newArrivals.map((item, index) => {
-                const selectedQuantityIndex = selectedQuantities[item.id] || 0;
-                const selectedPriceDetail = item.price_details[selectedQuantityIndex];
+            {
+              newArrivals.length ? (
+                newArrivals.map((item, index) => {
+                  const selectedQuantityIndex = selectedQuantities[item.id] || 0;
+                  const selectedPriceDetail = item.price_details[selectedQuantityIndex];
 
-                return (
-                  <Card key={index} style={{ width: '18rem', marginRight: '15px' }} className="d-inline-block carousel-item">
-                    <Card.Img variant="top" className="cardImage" src={item.image_url} />
-                    <Card.Body>
-                      <Card.Title>
-                        <span className='carousel-item-name'>{item.name}</span>
-                        {
-                          wishlistItems.includes(item.id) ? 
-                          <span className='items-wishlist wishlisted'>
-                            <FaHeart onClick={() => handleAddRemoveWishist(item.id, false)} />
-                          </span> : 
-                          <span className='items-wishlist not-wishlisted'>
-                            <FaRegHeart onClick={() => handleAddRemoveWishist(item.id, true)} />
-                          </span>
-                        }
-                      </Card.Title>
-                      <Card.Text className='d-flex justify-content-between carousel-item-desc'>
-                        ₹ {selectedPriceDetail.amount}
-                        <select onChange={(e) => handleQuantityChange(item.id, e.target.value)} value={selectedQuantityIndex}>
-                          {item.price_details.map((priceDetail, idx) => (
-                            <option key={idx} value={idx}>{priceDetail.quantity}</option>
-                          ))}
-                        </select>
-                        {item.stock === 'out-of-stock' ? 
-                          <div className='m-3 text-danger'><span>Out of stock</span></div> : 
-                          renderItemControls(item.id)
-                        }
-                      </Card.Text>
-                    </Card.Body>
-                  </Card>
-                );
-              })
-            ) : (
-              <p>No new arrivals available.</p>
-            )
-          }
+                  return (
+                    <Card key={index} style={{ width: '18rem', marginRight: '15px' }} className="d-inline-block carousel-item">
+                      <Card.Img variant="top" className="cardImage" src={item.image_url} />
+                      <Card.Body>
+                        <Card.Title>
+                          <span className='carousel-item-name'>{item.name}</span>
+                          {
+                            wishlistItems.includes(item.id) ?
+                              <span className='items-wishlist wishlisted'>
+                                <FaHeart onClick={() => handleAddRemoveWishist(item.id, false)} />
+                              </span> :
+                              <span className='items-wishlist not-wishlisted'>
+                                <FaRegHeart onClick={() => handleAddRemoveWishist(item.id, true)} />
+                              </span>
+                          }
+                        </Card.Title>
+                        <Card.Text className='d-flex justify-content-between carousel-item-desc'>
+                          ₹ {selectedPriceDetail.amount}
+                          <select onChange={(e) => handleQuantityChange(item.id, e.target.value)} value={selectedQuantityIndex}>
+                            {item.price_details.map((priceDetail, idx) => (
+                              <option key={idx} value={idx}>{priceDetail.quantity}</option>
+                            ))}
+                          </select>
+                          {item.stock === 'out-of-stock' ?
+                            <div className='m-3 text-danger'><span>Out of stock</span></div> :
+                            renderItemControls(item.id)
+                          }
+                        </Card.Text>
+                      </Card.Body>
+                    </Card>
+                  );
+                })
+              ) : (
+                <p>No new arrivals available.</p>
+              )
+            }
           </div>
           <button className="carousel-control carousel-control-right" onClick={() => handleScroll('right', newArrivalsRef)} disabled={!newArrivals.length}>
             <FaArrowRight />
@@ -458,28 +506,26 @@ const HomePage = ({setActiveTab, setCategoryId, setCartNumber, cartNumber, setAc
             <FaWhatsapp className="mx-2" />
           </a>
         </div>
-        <div className="designer-credit">
-          <p>Page Designed By <span className='content-primary'>Shibina</span></p>
-          <p>Contact <span className='content-primary'>shibinashibi1507@gmail.com</span></p>
-        </div>
+        
+        <p style={{fontSize: '12px'}}>Copyright &copy; Order2me Freshmart</p>
       </footer>
       {
         appStatus === 'OFF' ? <div className="timings-banner-off off-bg footer-banner text-center text-white my-3">
-          <p>We are not currently accepting any orders!</p></div> : 
-        cartNumber > 0 ? <div className="footer-banner text-center my-3 text-white" onClick={() => setActivePage('cart')}>
-        Proceed to checkout <FaRegArrowAltCircleRight className='ms-3'/>
-      </div> : null
+          <p>We are not currently accepting any orders!</p></div> :
+          cartNumber > 0 ? <div className="footer-banner text-center my-3 text-white" onClick={() => setActivePage('cart')}>
+            Proceed to checkout <FaRegArrowAltCircleRight className='ms-3' />
+          </div> : null
       }
     </div>) : (<div className='loader-container'><div className="loader">
-        <div></div>
-        <div></div>
-        <div></div>
-        <div></div>
-        <div></div>
-        <div></div>
-        <div></div>
-        <div></div>
-        <div></div>
+      <div></div>
+      <div></div>
+      <div></div>
+      <div></div>
+      <div></div>
+      <div></div>
+      <div></div>
+      <div></div>
+      <div></div>
     </div></div>)
   );
 };
