@@ -10,7 +10,7 @@ const SubNavbar = ({ setActiveTab, activeTab, setCategoryId }) => {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({path: "/get/categories"}),
+        body: JSON.stringify({path: "/get/categories", location: localStorage.getItem('userCity')}),
       });
       let data = await res.json();
       data = JSON.parse(data.body);

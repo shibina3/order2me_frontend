@@ -114,10 +114,7 @@ const ManageOrders = (props) => {
   const handleDeliveryPartnerChange = (e) => {
     const selectedPartnerId = e.target.value;
     setSelectedPartner(selectedPartnerId);
-  };
-
-  console.log("groupedOrders", groupedOrders.placed);
-  
+  };  
 
   return (
     <div className="manage-orders">
@@ -141,6 +138,7 @@ const ManageOrders = (props) => {
                 <Card key={order.id} className="mb-3">
                   <Card.Body>
                     <Card.Title>Order ID: {order.id}</Card.Title>
+                    <Card.Text>Customer Name: {order.username}</Card.Text>
                     <Card.Text>Address: {order.address}</Card.Text>
                     <Card.Text>Phone: {order.phone_number}</Card.Text>
                     <Card.Text>Payment Method: {order.payment_method}</Card.Text>
@@ -184,6 +182,7 @@ const ManageOrders = (props) => {
                 <Card key={order.id} className="mb-3">
                   <Card.Body>
                     <Card.Title>Order ID: {order.id}</Card.Title>
+                    <Card.Text>Customer Name: {order.username}</Card.Text>
                     <Card.Text>Address: {order.address}</Card.Text>
                     <Card.Text>Phone: {order.phone_number}</Card.Text>
                     <Card.Text>Payment Method: {order.payment_method}</Card.Text>
@@ -239,6 +238,7 @@ const ManageOrders = (props) => {
                 <Card key={order.id} className="mb-3">
                   <Card.Body>
                     <Card.Title>Order ID: {order.id}</Card.Title>
+                    <Card.Text>Customer Name: {order.username}</Card.Text>
                     <Card.Text>Address: {order.address}</Card.Text>
                     <Card.Text>Phone: {order.phone_number}</Card.Text>
                     <Card.Text>Payment Method: {order.payment_method}</Card.Text>
@@ -285,6 +285,7 @@ const ManageOrders = (props) => {
                 <Card key={order.id} className="mb-3">
                   <Card.Body>
                     <Card.Title>Order ID: {order.id}</Card.Title>
+                    <Card.Text>Customer Name: {order.username}</Card.Text>
                     <Card.Text>Address: {order.address}</Card.Text>
                     <Card.Text>Phone: {order.phone_number}</Card.Text>
                     <Card.Text>Payment Method: {order.payment_method}</Card.Text>
@@ -324,6 +325,7 @@ const ManageOrders = (props) => {
                 <Card key={order.id} className="mb-3">
                   <Card.Body>
                     <Card.Title>Order ID: {order.id}</Card.Title>
+                    <Card.Text>Customer Name: {order.username}</Card.Text>
                     <Card.Text>Address: {order.address}</Card.Text>
                     <Card.Text>Phone: {order.phone_number}</Card.Text>
                     <Card.Text>Payment Method: {order.payment_method}</Card.Text>

@@ -43,7 +43,7 @@ const ManageCategories = (props) => {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
       },
-      body: JSON.stringify({ path: "/get/categories" }),
+      body: JSON.stringify({ path: "/get/categories", location: localStorage.getItem('userCity') }),
     });
     let allCategories = await allCategoriesRes.json();
     allCategories = JSON.parse(allCategories.body);

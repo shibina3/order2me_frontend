@@ -146,6 +146,7 @@ const DeliveryPartnerDashboard = (props) => {
                 <Card key={order.id} className="mb-3">
                   <Card.Body>
                     <Card.Title>Order ID: {order.id}</Card.Title>
+                    <Card.Text>Customer Name: {order.username}</Card.Text>
                     <Card.Text>Address: {order.address}</Card.Text>
                     <Card.Text>Phone: {order.phone_number}</Card.Text>
                     <Card.Text>Payment Method: {order.payment_method}</Card.Text>
@@ -200,6 +201,7 @@ const DeliveryPartnerDashboard = (props) => {
                 <Card key={order.id} className="mb-3">
                   <Card.Body>
                     <Card.Title>Order ID: {order.id}</Card.Title>
+                    <Card.Text>Customer Name: {order.username}</Card.Text>
                     <Card.Text>Address: {order.address}</Card.Text>
                     <Card.Text>Phone: {order.phone_number}</Card.Text>
                     <Card.Text>Payment Method: {order.payment_method}</Card.Text>

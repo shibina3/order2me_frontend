@@ -18,7 +18,7 @@ export default function Wishlist({ setCartNumber }) {
                 headers: {
                   'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({path: "/get/cart", userId: localStorage.getItem('userID') })
+                body: JSON.stringify({path: "/get/cart", userId: localStorage.getItem('userID'), location: localStorage.getItem('userCity') })
             });
             let cartData = await cartRes.json();
             cartData = JSON.parse(cartData.body);

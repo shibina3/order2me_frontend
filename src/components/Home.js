@@ -41,7 +41,7 @@ const HomePage = ({ setActiveTab, setCategoryId, setCartNumber, cartNumber, setA
           'Content-Type': 'application/json',
           'Accept': 'application/json',
         },
-        body: JSON.stringify({ path: "/get/categories" })
+        body: JSON.stringify({ path: "/get/categories", location: localStorage.getItem('userCity') })
       });
       let allCategories = await allCategoriesRes.json();
       setAppStatus(allCategories.app_status);
@@ -57,7 +57,7 @@ const HomePage = ({ setActiveTab, setCategoryId, setCartNumber, cartNumber, setA
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ path: "/get/cart", userId: localStorage.getItem('userID') })
+        body: JSON.stringify({ path: "/get/cart", userId: localStorage.getItem('userID'), location: localStorage.getItem('userCity') })
       });
       let cartData = await cartRes.json();
       cartData = JSON.parse(cartData.body);
@@ -297,7 +297,7 @@ const HomePage = ({ setActiveTab, setCategoryId, setCartNumber, cartNumber, setA
       {/* Banner for Available Timings */}
       {
         appStatus === 'ON' ? <div className="timings-banner text-center my-3">
-          <p>Order Acceptance Timings: Mon-Fri: 9 AM - 8 PM, Sat-Sun: 10 AM - 6 PM</p>
+          <p>{details.find(detail => detail.key === 'banner')?.value}</p>
         </div> : <div className="timings-banner-off text-center text-danger my-3">
           <p>We are not currently accepting any orders!</p>
         </div>

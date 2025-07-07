@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect  } from 'react';
 import { Navbar, Nav, Form, Button } from 'react-bootstrap';
-import { FaSearch, FaShoppingCart, FaSignInAlt, FaTimes, FaBars, FaHeart } from 'react-icons/fa';
+import { FaSearch, FaShoppingCart, FaSignInAlt, FaTimes, FaBars, FaHeart, FaWallet } from 'react-icons/fa';
 import { IoHome } from "react-icons/io5";
 import { CgProfile } from "react-icons/cg";
 import { BsCartCheckFill } from "react-icons/bs";
@@ -14,6 +14,7 @@ const AppNavbar = (props) => {
   const sidebarRef = useRef(null);
   const [isAdmin, setAdmin] = useState(false);
   const [isDeliveryPartner, setDeliveryPartner] = useState(false);
+  const [wallet, setWallet] = useState(0);
 
   useEffect( () => {
     const fetchData = async () => {
@@ -32,6 +33,7 @@ const AppNavbar = (props) => {
       if(userData.data.delivery_partner) {
         setDeliveryPartner(true);
       }
+      setWallet(userData.data.wallet);
     }
     fetchData();
   }, []);
@@ -123,6 +125,7 @@ const AppNavbar = (props) => {
               <Nav.Link onClick={() => {setPage('my_profile');toggleBreadcrumb();}} className="content-primary"><CgProfile className='sidebar-icons' /> My Profile</Nav.Link>
               <Nav.Link onClick={() => {setPage('purchase_history');toggleBreadcrumb();}} className="content-primary"><BsCartCheckFill className='sidebar-icons' />My Orders</Nav.Link>
               <Nav.Link onClick={() => {setPage('wishlist');toggleBreadcrumb();}} className="content-primary"><FaHeart className='sidebar-icons' />My Wishlist</Nav.Link>
+              <Nav.Link className="content-primary"><FaWallet className='sidebar-icons' />Wallet: {wallet}</Nav.Link>
               <Nav.Link onClick={() => {setPage('cart');toggleBreadcrumb();}} className="content-primary pb-0"><FaShoppingCart className='sidebar-icons' />Cart<span className="side-bar-badge">{props.cartNumber}</span></Nav.Link>
               {
                 isAdmin ? <Nav.Link onClick={() => {setPage('admin');toggleBreadcrumb();}} className="content-primary pt-0"><RiAdminFill className='sidebar-icons' />Admin</Nav.Link> : <></>

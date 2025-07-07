@@ -20,7 +20,7 @@ const Cart = (props) => {
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({userId: localStorage.getItem('userID'), path: "/get/cart"})
+          body: JSON.stringify({userId: localStorage.getItem('userID'), path: "/get/cart", location: localStorage.getItem('userCity')})
         });
 
         if (!cartItemsRes.ok) throw new Error("Failed to fetch cart items");

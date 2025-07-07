@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, act } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './App.css';
 import NavBar from './components/NavBar';
@@ -26,6 +26,8 @@ import ManageOrders from './components/adminAccess/ManageOrders';
 import DeliveryPartnerDashboard from './components/DeliveryPartner/DeliveryPartnerDashboard';
 import ManageTimeSlots from './components/adminAccess/ManageTimeSlots';
 import ClubCategories from './components/adminAccess/ClubCategories';
+import ManageWallet from './components/adminAccess/ManageWallet';
+import ManagePromoCodes from './components/adminAccess/ManagePromoCodes';
 
 function App() {
   const [activePage, setActivePage] = useState(localStorage.getItem('email') ? 'home' : 'login');
@@ -37,12 +39,20 @@ function App() {
   const [ cities, setCities] = useState([]);
   const [cartNumber, setCartNumber] = useState(0);
   const [appStatus, setAppStatus] = useState('ON');
+  const [locDetails, setLocDetails] = useState([]);
 
-  const handleCityChange = (event) => {
+  const handleCityChange = async (event) => {
     const selectedCity = event.target.value;
     setCity(selectedCity);
     localStorage.setItem('userCity', selectedCity); 
     setShowCitySelection(false); 
+    await fetch(`https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({userId: localStorage.getItem('userID'), path: "/clear/cart"})
+    });
     window.location.reload();
   };
   
@@ -59,13 +69,13 @@ function App() {
       getLocData = JSON.parse(getLocData?.body) || [];
       let locations = getLocData?.map(loc => loc.name);
       setCities(locations);
-
+      setLocDetails(getLocData);
       const cartItemsRes = await fetch(`https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({userId: localStorage.getItem('userID'), path: "/get/cart"})
+        body: JSON.stringify({userId: localStorage.getItem('userID'), path: "/get/cart", location: localStorage.getItem('userCity')})
       });
 
       if (!cartItemsRes.ok) throw new Error("Failed to fetch cart items");
@@ -87,17 +97,23 @@ function App() {
     }
   }, []);
 
-  const toggleAppStatus = async () => {
+  const toggleAppStatus = async (location, currentAppStatus) => {
     const updateAppStatusRes = await fetch(`https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({path: "/put/app_status", app_status: appStatus === 'ON' ? 'OFF' : 'ON'}),
+      body: JSON.stringify({path: "/put/app_status", app_status: currentAppStatus === 'ON' ? 'OFF' : 'ON', location: location }),
     });
     let data = await updateAppStatusRes.json();
     if(data.message === 'App status updated') {
       setAppStatus(appStatus === 'ON' ? 'OFF' : 'ON');
+      setLocDetails(locDetails.map(loc => {
+        if(loc.name === location) {
+          loc.app_status = loc.app_status === 'ON' ? 'OFF' : 'ON';
+        }
+        return loc;
+      }));
     }
   }
   
@@ -141,7 +157,7 @@ function App() {
         activePage === "order_placed" ? <OrderPlaced setActivePage={setActivePage} /> :
         activePage === "wishlist" ? <Wishlist setCartNumber={setCartNumber} /> :
         activePage === "search" ? <SearchResults setCartNumber={setCartNumber} /> :
-        activePage === "admin" ? <AdminDashboard setActivePage={setActivePage} appStatus={appStatus} toggleAppStatus={toggleAppStatus} /> :
+        activePage === "admin" ? <AdminDashboard setActivePage={setActivePage} appStatus={appStatus} toggleAppStatus={toggleAppStatus} locDetails={locDetails} /> :
         activePage === "manage-locations" ? <ManageLocations setActivePage={setActivePage} /> :
         activePage === "manage-categories" ? <ManageCategories setActivePage={setActivePage} /> :
         activePage === "club_categories" ? <ClubCategories setActivePage={setActivePage} /> :
@@ -152,6 +168,8 @@ function App() {
         activePage === "manage-orders" ? <ManageOrders setActivePage={setActivePage} /> :
         activePage === "delivery_partner" ? <DeliveryPartnerDashboard setActivePage={setActivePage} /> :
         activePage === "time_slots" ? <ManageTimeSlots setActiveTab={setActiveTab} setActivePage={setActivePage} /> :
+        activePage === "manage-wallet" ? <ManageWallet setActiveTab={setActiveTab} setActivePage={setActivePage} /> :
+        activePage === "manage-promo-codes" ? <ManagePromoCodes setActiveTab={setActiveTab} setActivePage={setActivePage} /> :
         null
       }      
     </Container>

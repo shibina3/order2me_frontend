@@ -24,10 +24,11 @@ const ManageDetails = (props) => {
       const fetchedDetails = JSON.parse(data.body);
 
       // Set the details and initialize updatedDetails with values
-      const initialDetails = fetchedDetails.map(data => ({
+      let initialDetails = fetchedDetails.map(data => ({
         key: data.key.trim(),
         value: data.value.trim()
       }));
+      initialDetails = initialDetails.sort((a, b) => a.key.localeCompare(b.key));
       setDetails(initialDetails);
 
       const updated = {};
