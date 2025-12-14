@@ -28,6 +28,7 @@ import ManageTimeSlots from './components/adminAccess/ManageTimeSlots';
 import ClubCategories from './components/adminAccess/ClubCategories';
 import ManageWallet from './components/adminAccess/ManageWallet';
 import ManagePromoCodes from './components/adminAccess/ManagePromoCodes';
+import { apiCall } from './config';
 
 function App() {
   const [activePage, setActivePage] = useState(localStorage.getItem('email') ? 'home' : 'login');
@@ -46,44 +47,34 @@ function App() {
     setCity(selectedCity);
     localStorage.setItem('userCity', selectedCity); 
     setShowCitySelection(false); 
-    await fetch(`https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({userId: localStorage.getItem('userID'), path: "/clear/cart"})
-    });
+    await apiCall('/clear/cart', { body: { userId: localStorage.getItem('userID') } });
     window.location.reload();
   };
   
   useEffect(() => {
     const fetchCities = async () => {
-      const getLocRes = await fetch(`https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({path: "/get/location" }),
-      });
-      let getLocData = await getLocRes.json();
-      getLocData = JSON.parse(getLocData?.body) || [];
-      let locations = getLocData?.map(loc => loc.name);
-      setCities(locations);
-      setLocDetails(getLocData);
-      const cartItemsRes = await fetch(`https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({userId: localStorage.getItem('userID'), path: "/get/cart", location: localStorage.getItem('userCity')})
-      });
+      try {
+        const getLocData = await apiCall('/get/location');
+        const locations = (getLocData.body || []).map(loc => loc.name);
+        setCities(locations);
+        setLocDetails(getLocData.body || []);
+      } catch (error) {
+        console.error("Error fetching locations:", error);
+      }
 
-      if (!cartItemsRes.ok) throw new Error("Failed to fetch cart items");
-
-      let storedCart = await cartItemsRes.json();       
-      setAppStatus(storedCart.app_status); 
-      storedCart = JSON.parse(storedCart.body);
-      setCartNumber(storedCart.reduce((sum, item) => sum + item.quantity, 0));
+      try {
+        const cartItemsRes = await apiCall('/get/cart', {
+          body: {
+            userId: localStorage.getItem('userID'),
+            location: localStorage.getItem('userCity')
+          }
+        });
+        setAppStatus(cartItemsRes.app_status); 
+        const cartItems = cartItemsRes.body || [];
+        setCartNumber(cartItems.reduce((sum, item) => sum + item.quantity, 0));
+      } catch (error) {
+        console.error("Error fetching cart:", error);
+      }
     }
     fetchCities();
     setTimeout(()=> {
@@ -98,22 +89,24 @@ function App() {
   }, []);
 
   const toggleAppStatus = async (location, currentAppStatus) => {
-    const updateAppStatusRes = await fetch(`https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({path: "/put/app_status", app_status: currentAppStatus === 'ON' ? 'OFF' : 'ON', location: location }),
-    });
-    let data = await updateAppStatusRes.json();
-    if(data.message === 'App status updated') {
-      setAppStatus(appStatus === 'ON' ? 'OFF' : 'ON');
-      setLocDetails(locDetails.map(loc => {
-        if(loc.name === location) {
-          loc.app_status = loc.app_status === 'ON' ? 'OFF' : 'ON';
+    try {
+      const data = await apiCall('/put/app_status', {
+        body: {
+          app_status: currentAppStatus === 'ON' ? 'OFF' : 'ON',
+          location: location
         }
-        return loc;
-      }));
+      });
+      if(data.message === 'App status updated') {
+        setAppStatus(appStatus === 'ON' ? 'OFF' : 'ON');
+        setLocDetails(locDetails.map(loc => {
+          if(loc.name === location) {
+            loc.app_status = loc.app_status === 'ON' ? 'OFF' : 'ON';
+          }
+          return loc;
+        }));
+      }
+    } catch (error) {
+      console.error("Error updating app status:", error);
     }
   }
   

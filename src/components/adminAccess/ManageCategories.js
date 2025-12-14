@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button, ListGroup, Form, InputGroup, Accordion, Alert } from 'react-bootstrap';
-import AWS from 'aws-sdk';
 import { DragDropContext, Draggable, Droppable } from 'react-beautiful-dnd';
+import { API_ENDPOINTS, apiCall } from '../../config';
 
 const ManageCategories = (props) => {
   const [categories, setCategories] = useState([]);
@@ -37,52 +37,47 @@ const ManageCategories = (props) => {
   }, []);
 
   const fetchCategories = async () => {
-    const allCategoriesRes = await fetch("https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/", {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      },
-      body: JSON.stringify({ path: "/get/categories", location: localStorage.getItem('userCity') }),
-    });
-    let allCategories = await allCategoriesRes.json();
-    allCategories = JSON.parse(allCategories.body);
-    allCategories = allCategories.sort((a, b) => a.order - b.order);
+    try {
+      const allCategoriesRes = await fetch(`${API_ENDPOINTS.GET_CATEGORIES}?location=${localStorage.getItem('userCity')}`);
+      let allCategories = await allCategoriesRes.json();
+      allCategories = allCategories.body || [];
+      allCategories = allCategories.sort((a, b) => a.order - b.order);
 
-    const groupedCategories = allCategories.reduce((acc, category) => {
-      acc[category.location] = acc[category.location] || [];
-      acc[category.location].push(category);
-      return acc;
-    }, {});    
+      const groupedCategories = allCategories.reduce((acc, category) => {
+        acc[category.location] = acc[category.location] || [];
+        acc[category.location].push(category);
+        return acc;
+      }, {});    
 
-    setCategories(groupedCategories);
+      setCategories(groupedCategories);
+    } catch (error) {
+      console.error("Error fetching categories:", error);
+    }
 
-    let locRes = await fetch("https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/", {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ path: "/get/location" }),
-    });
-    let allLoc = await locRes.json();
-    allLoc = JSON.parse(allLoc.body);
-    allLoc = allLoc?.map(loc => loc.name);
-    setLocations(allLoc);
+    try {
+      const allLoc = await apiCall('/get/location');
+      const locations = (allLoc.body || []).map(loc => loc.name);
+      setLocations(locations);
+    } catch (error) {
+      console.error("Error fetching locations:", error);
+    }
   };
 
-  const uploadImageToS3 = async (file) => {
-    const s3 = new AWS.S3({
-      accessKeyId: "AKIAZDZTB5RQFRIRMYHM",
-      secretAccessKey: "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",
-      region: 'us-east-1',
+  const uploadImage = async (file) => {
+    const formData = new FormData();
+    formData.append('image', file);
+    
+    const response = await fetch(API_ENDPOINTS.UPLOAD, {
+      method: 'POST',
+      body: formData,
     });
-    const params = {
-      Bucket: 'order2me.in',
-      Key: `categories/${location}/${file.name}`,
-      Body: file,
-      ContentType: file.type,
-    };
-    return s3.upload(params).promise();
+    
+    if (!response.ok) {
+      throw new Error('Image upload failed');
+    }
+    
+    const result = await response.json();
+    return { Location: result.imageUrl };
   };
 
   const handleAddCategory = async () => {
@@ -91,10 +86,10 @@ const ManageCategories = (props) => {
       return;
     }
 
-    // Upload image to S3
+    // Upload image
     let uploadedImage;
     try {
-      uploadedImage = await uploadImageToS3(newImage);
+      uploadedImage = await uploadImage(newImage);
     } catch (error) {
       setAlertMessage("Error uploading image:", error);
       setAlertType('danger');
@@ -104,13 +99,12 @@ const ManageCategories = (props) => {
     }
 
     // Add new category
-    const addCategoryRes = await fetch(`https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/`, {
+    const addCategoryRes = await fetch(API_ENDPOINTS.ADD_CATEGORY, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        path: "/add/categories",
         name: newCategory,
         description: newDescription,
         image_url: uploadedImage.Location,
@@ -133,12 +127,12 @@ const ManageCategories = (props) => {
   };
 
   const handleEditCategory = async (id) => {
-    const editCategoryRes = await fetch(`https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/`, {
+    const editCategoryRes = await fetch(API_ENDPOINTS.UPDATE_CATEGORY, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ id: id, path: "/put/categories", name: editForm.name, description: editForm.description, image_url: editForm.image_url, location: editForm.location, order: editForm.order, hide: editForm.hide }),
+      body: JSON.stringify({ id: id, name: editForm.name, description: editForm.description, image_url: editForm.image_url, location: editForm.location, order: editForm.order, hide: editForm.hide }),
     });
     let editCategoryData = await editCategoryRes.json();
     if (editCategoryData.message === "Category Edited") {
@@ -151,12 +145,12 @@ const ManageCategories = (props) => {
   }
 
   const handleDeleteCategory = async (id) => {
-    const deleteCategoryRes = await fetch(`https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/`, {
+    const deleteCategoryRes = await fetch(API_ENDPOINTS.DELETE_CATEGORY, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ id: id, path: "/delete/categories" }),
+      body: JSON.stringify({ id: id }),
     });
     let deleteCategoryData = await deleteCategoryRes.json();
     if (deleteCategoryData.message === "Category Deleted") {
@@ -168,7 +162,7 @@ const ManageCategories = (props) => {
   };
 
   const handleHideUnhideCategory = async (id, hide) => {
-    const hideUnhideCategoryRes = await fetch(`https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/`, {
+    const hideUnhideCategoryRes = await fetch(API_ENDPOINTS.HIDE_UNHIDE_CATEGORY, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -190,7 +184,7 @@ const ManageCategories = (props) => {
       order: index + 1,
     }));
 
-    const updateOrderRes = await fetch(`https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/`, {
+    const updateOrderRes = await fetch(API_ENDPOINTS.UPDATE_CATEGORIES_ORDER, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -331,8 +325,8 @@ const ManageCategories = (props) => {
                                         <Form.Control
                                           type="file"
                                           onChange={async (e) => {
-                                            let uploadtoS3 = await uploadImageToS3(e.target.files[0]);
-                                            setEditForm({ ...editForm, image_url: uploadtoS3.Location });
+                                            let uploadedImage = await uploadImage(e.target.files[0]);
+                                            setEditForm({ ...editForm, image_url: uploadedImage.Location });
                                           }}
                                         />
                                       </InputGroup>

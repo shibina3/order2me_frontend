@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Accordion, Card, Button, Form, Alert } from 'react-bootstrap';
 import { RiDeleteBinLine } from "react-icons/ri";
-import AWS from 'aws-sdk';
+import { API_ENDPOINTS, apiCall } from '../../config';
 
 const ManageProducts = (props) => {
   const [items, setItems] = useState([]);
@@ -15,53 +15,31 @@ const ManageProducts = (props) => {
   const [show, setShow] = useState(true);
   const [locations, setLocations] = useState([]);
 
-  const s3 = new AWS.S3({
-    accessKeyId: "AKIAZDZTB5RQFRIRMYHM",
-    secretAccessKey: "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",
-    region: 'us-east-1',
-  });
-
   useEffect(() => {
     const fetchItems = async () => {
       try {
-        const allItemsRes = await fetch("https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/", {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ path: "/get/items" }),
-        });
-
-        let allItems = await allItemsRes.json();
-        allItems = JSON.parse(allItems.body);
-        setItems(allItems);
+        const allItemsRes = await apiCall('/get/items');
+        setItems(allItemsRes.body || []);
       } catch (error) {
         console.error("Error fetching items:", error);
       }
 
-      const allCategoriesRes = await fetch("https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/", {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-        body: JSON.stringify({ path: "/get/categories", location: localStorage.getItem('userCity') }),
-      });
-      let allCategories = await allCategoriesRes.json();
-      allCategories = JSON.parse(allCategories.body);
-      allCategories = allCategories.sort((a, b) => a.id - b.id);
-      setCategories(allCategories);
+      try {
+        const allCategoriesRes = await fetch(`${API_ENDPOINTS.GET_CATEGORIES}?location=${localStorage.getItem('userCity')}`);
+        let allCategories = await allCategoriesRes.json();
+        allCategories = allCategories.body || [];
+        allCategories = allCategories.sort((a, b) => a.id - b.id);
+        setCategories(allCategories);
+      } catch (error) {
+        console.error("Error fetching categories:", error);
+      }
 
-      let locRes = await fetch("https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/", {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ path: "/get/location" }),
-      });
-      let allLoc = await locRes.json();
-      allLoc = JSON.parse(allLoc.body);
-      setLocations(allLoc);
+      try {
+        const allLoc = await apiCall('/get/location');
+        setLocations(allLoc.body || []);
+      } catch (error) {
+        console.error("Error fetching locations:", error);
+      }
     };
 
     fetchItems();
@@ -73,16 +51,21 @@ const ManageProducts = (props) => {
     return () => clearTimeout(timer);
   }, []);
 
-  const uploadImageToS3 = async (file, category, itemName) => {
-    const params = {
-      Bucket: 'order2me.in',
-      Key: `${category}/${itemName}`,
-      Body: file,
-      ContentType: file.type,
-    };
-
-    const uploadResult = await s3.upload(params).promise();
-    return uploadResult.Location;
+  const uploadImage = async (file) => {
+    const formData = new FormData();
+    formData.append('image', file);
+    
+    const response = await fetch(API_ENDPOINTS.UPLOAD, {
+      method: 'POST',
+      body: formData,
+    });
+    
+    if (!response.ok) {
+      throw new Error('Image upload failed');
+    }
+    
+    const result = await response.json();
+    return result.imageUrl;
   };
 
   const handleSave = async (isNewItem = false) => {
@@ -99,10 +82,11 @@ const ManageProducts = (props) => {
 
       // Handle image upload if a new image is provided
       if (imageFile) {
-        imageUrl = await uploadImageToS3(imageFile, isNewItem ? newItemForm.category : formData.category, isNewItem ? newItemForm.name : formData.name);
+        imageUrl = await uploadImage(imageFile);
       }
 
-      const response = await fetch(`https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/`, {
+      const endpoint = isNewItem ? API_ENDPOINTS.ADD_ITEM : API_ENDPOINTS.UPDATE_ITEM;
+      const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -110,7 +94,7 @@ const ManageProducts = (props) => {
         body: JSON.stringify({
           ...data,
           image_url: imageUrl || data.image_url, // Use the new image URL or the existing one
-          path: apiPath,
+          ...(isNewItem ? {} : { id: formData.id }),
         }),
       });
 
@@ -151,15 +135,12 @@ const ManageProducts = (props) => {
 
   const handleDelete = async (id) => {
     try {
-      const response = await fetch(`https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/`, {
+      const response = await fetch(API_ENDPOINTS.DELETE_ITEM, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          id,
-          path: "/delete/items",
-        }),
+        body: JSON.stringify({ id }),
       });
 
       const result = await response.json();
