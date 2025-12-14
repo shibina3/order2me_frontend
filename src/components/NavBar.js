@@ -23,14 +23,15 @@ const AppNavbar = (props) => {
         const userDetailRes = await apiCall('/get/user-detail', {
           body: { email: localStorage.getItem('email') }
         });
-        let userData = userDetailRes.body || {};
-        if(userData.data?.admin) {
+        // Backend returns { message: "...", data: {...} }
+        let userData = userDetailRes.data || {};
+        if(userData.admin) {
           setAdmin(true);
         }
-        if(userData.data?.delivery_partner) {
+        if(userData.delivery_partner) {
           setDeliveryPartner(true);
         }
-        setWallet(userData.data?.wallet || 0);
+        setWallet(userData.wallet || 0);
       } catch (error) {
         console.error("Error fetching user details:", error);
       }
