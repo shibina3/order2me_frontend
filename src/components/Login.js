@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Form, Button, Card, Alert } from 'react-bootstrap';
+import { API_ENDPOINTS, apiCall } from '../config';
 
 const Login = (props) => {
   const [email, setEmail] = useState('');
@@ -12,49 +13,45 @@ const Login = (props) => {
 
   const handleLoginSubmit = async (e) => {
     e.preventDefault();
-    const data = { email, password, path: "/login" };
-    const response = await fetch('https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(data),
-    });
-    let result = await response.json();
-    result = JSON.parse(result.body);
-    
-    if(result.message){
-      setAlertMessage(result.message);
-      setAlertType('success');
-      localStorage.setItem('email', result?.data?.email);
-      localStorage.setItem('mobile', result?.data?.mobile);
-      localStorage.setItem('name',result?.data?.username);
-      localStorage.setItem('userID', result?.data?.id);
-      props.setActivePage('home');
-    } else {
-      setAlertMessage(result.error);
+    try {
+      const result = await apiCall('/login', {
+        body: { email, password }
+      });
+      
+      if(result.message){
+        setAlertMessage(result.message);
+        setAlertType('success');
+        localStorage.setItem('email', result?.data?.email);
+        localStorage.setItem('mobile', result?.data?.mobile);
+        localStorage.setItem('name',result?.data?.username);
+        localStorage.setItem('userID', result?.data?.id);
+        props.setActivePage('home');
+      } else {
+        setAlertMessage(result.error);
+        setAlertType('danger');
+      }
+    } catch (error) {
+      setAlertMessage('Error during login');
       setAlertType('danger');
     }
   };
 
   const handleRegisterSubmit = async (e) => {
     e.preventDefault();
-    const data = { email, mobile, password, username, path: "/register" };
-    const response = await fetch('https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(data),
-    });
-    let result = await response.json();
-    result = JSON.parse(result.body);
-    if(result.message){
-      setAlertMessage(result.message);
-      setAlertType('success');
-      setIsLogin(true);
-    } else {
-      setAlertMessage(result.error);
+    try {
+      const result = await apiCall('/register', {
+        body: { email, mobile, password, username }
+      });
+      if(result.message){
+        setAlertMessage(result.message);
+        setAlertType('success');
+        setIsLogin(true);
+      } else {
+        setAlertMessage(result.error);
+        setAlertType('danger');
+      }
+    } catch (error) {
+      setAlertMessage('Error during registration');
       setAlertType('danger');
     }
   };

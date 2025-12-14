@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Alert } from 'react-bootstrap';
 import { FaRegHeart, FaHeart, FaRegArrowAltCircleRight } from "react-icons/fa";
+import { apiCall } from '../config';
 
 export default function Items({ activeTab, categoryId, setCartNumber, cartNumber, setActivePage}) {
     const [items, setItems] = useState([]);
@@ -16,53 +17,31 @@ export default function Items({ activeTab, categoryId, setCartNumber, cartNumber
             setLoading(true);
             let itemsData;
             if(activeTab === "New Arrivals") {
-                const itemsRes = await fetch(`https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/`, {
-                    method: 'POST',
-                    headers: {
-                      'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({path: "/get/items"})
-                });
-                itemsData = await itemsRes.json();
-                itemsData = JSON.parse(itemsData.body);
-                itemsData = itemsData.filter(cat => cat.location === localStorage.getItem('userCity'))
-                
+                const itemsRes = await apiCall('/get/items');
+                itemsData = itemsRes.body || [];
+                itemsData = itemsData.filter(cat => cat.location === localStorage.getItem('userCity'));
                 itemsData = itemsData.filter(item => item.new_arrival);
             } else if( activeTab === "Popular Items") {
-                const itemsRes = await fetch(`https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/`, {
-                    method: 'POST',
-                    headers: {
-                      'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({path: "/get/items"})
-                });
-                itemsData = await itemsRes.json();
-                itemsData = JSON.parse(itemsData.body);
-                itemsData = itemsData.filter(cat => cat.location === localStorage.getItem('userCity'))
+                const itemsRes = await apiCall('/get/items');
+                itemsData = itemsRes.body || [];
+                itemsData = itemsData.filter(cat => cat.location === localStorage.getItem('userCity'));
                 itemsData = itemsData.filter(item => item.popular_item);
             } else {
-                const itemsRes = await fetch(`https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/`, {
-                    method: 'POST',
-                    headers: {
-                      'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({path: "/get/items/category/categoryId", categoryId})
+                const itemsRes = await apiCall('/get/items/category/categoryId', {
+                    body: { categoryId }
                 });
-                itemsData = await itemsRes.json();
-                itemsData = JSON.parse(itemsData.body);
+                itemsData = itemsRes.body || [];
             }
 
             // Fetch items in the cart
-            const cartRes = await fetch(`https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/`, {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({path: "/get/cart", userId: localStorage.getItem('userID'), location: localStorage.getItem('userCity') })
+            const cartRes = await apiCall('/get/cart', {
+                body: {
+                    userId: localStorage.getItem('userID'),
+                    location: localStorage.getItem('userCity')
+                }
             });
-            let cartData = await cartRes.json();
-            setAppStatus(cartData.app_status);
-            cartData = JSON.parse(cartData.body);
+            setAppStatus(cartRes.app_status);
+            let cartData = cartRes.body || [];
             
             setCartNumber(cartData.reduce((sum, item) => sum + item.quantity, 0));
             
@@ -81,22 +60,18 @@ export default function Items({ activeTab, categoryId, setCartNumber, cartNumber
 
     useEffect(() => {
         const fetchWishlist = async() => {
-    
-            const allWishlistItemRes = await fetch(`https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/`, {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    user_id: localStorage.getItem('userID'),
-                    path: "/get/wishlist"
-                })
-            });
-            let allWishlistItems = await allWishlistItemRes.json();
-            allWishlistItems = JSON.parse(allWishlistItems.body);
-            allWishlistItems = allWishlistItems.length ? allWishlistItems.map(wish => wish.id) : [];
-            
-            setWishlistItems(allWishlistItems);
+            try {
+                const allWishlistItemRes = await apiCall('/get/wishlist', {
+                    body: {
+                        user_id: localStorage.getItem('userID')
+                    }
+                });
+                let allWishlistItems = allWishlistItemRes.body || [];
+                allWishlistItems = allWishlistItems.length ? allWishlistItems.map(wish => wish.id) : [];
+                setWishlistItems(allWishlistItems);
+            } catch (error) {
+                console.error("Error fetching wishlist:", error);
+            }
         }
         fetchWishlist();
     },[]);
@@ -120,19 +95,12 @@ export default function Items({ activeTab, categoryId, setCartNumber, cartNumber
             quantity: 1, 
             amount: selectedPriceDetail.amount,
             product_quantity: selectedPriceDetail.quantity,
-            path: "/post/cart",
             location: localStorage.getItem('userCity')
         };
 
-        let addRes = await fetch(`https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(cartItem)
+        let addData = await apiCall('/post/cart', {
+            body: cartItem
         });
-        let addData = await addRes.json();
-        addData = JSON.parse(addData.body);
         if(addData.error) {
             setShowPopup(true);
             localStorage.setItem('replacableItem', JSON.stringify(cartItem));
@@ -150,19 +118,14 @@ export default function Items({ activeTab, categoryId, setCartNumber, cartNumber
         const item = items.find(item => item.id === itemId);
         const selectedPriceDetail = item.price_details.find(detail => detail.quantity === item.selectedQuantity) || item.price_details[0];
 
-        await fetch(`https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ 
+        await apiCall('/put/cart', {
+            body: {
                 quantity: newQuantity, 
                 amount: selectedPriceDetail.amount, 
                 product_quantity: selectedPriceDetail.quantity,
                 user_id: localStorage.getItem('userID'), 
-                itemId: itemId, 
-                path: "/put/cart" 
-            })
+                itemId: itemId
+            }
         });
 
         let newCartItems = { ...cartItems, [itemId]: newQuantity };
@@ -178,30 +141,24 @@ export default function Items({ activeTab, categoryId, setCartNumber, cartNumber
         const selectedPriceDetail = item.price_details.find(detail => detail.quantity === item.selectedQuantity) || item.price_details[0];
 
         if (newQuantity > 0) {
-            await fetch(`https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/`, {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ 
-                    path: "/put/cart", 
+            await apiCall('/put/cart', {
+                body: {
                     quantity: newQuantity, 
                     amount: selectedPriceDetail.amount, 
                     product_quantity: selectedPriceDetail.quantity,
-                    user_id: localStorage.getItem('userID') ,
+                    user_id: localStorage.getItem('userID'),
                     itemId: itemId
-                })
+                }
             });
             let newCartItems = { ...cartItems, [itemId]: newQuantity };
             setCartItems(newCartItems);
             setCartNumber(Object.values(newCartItems).reduce((sum, item) => sum + item, 0));
         } else {
-            await fetch(`https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/`, {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ path: "/delete/cart", user_id: localStorage.getItem('userID'), id: itemId })
+            await apiCall('/delete/cart', {
+                body: {
+                    user_id: localStorage.getItem('userID'),
+                    id: itemId
+                }
             });
             const updatedCartItems = { ...cartItems };
             delete updatedCartItems[itemId];
@@ -213,16 +170,11 @@ export default function Items({ activeTab, categoryId, setCartNumber, cartNumber
     const handleAddRemoveWishist = async (itemId, wishlistFlag) => {
         const payload = {
             user_id: localStorage.getItem('userID'),
-            item_id: itemId,
-            path: wishlistFlag ? "/add/wishlist" : "/delete/wishlist"
+            item_id: itemId
         };
 
-        await fetch(`https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(payload)
+        await apiCall(wishlistFlag ? '/add/wishlist' : '/delete/wishlist', {
+            body: payload
         });
 
         if (wishlistFlag) {
@@ -235,18 +187,10 @@ export default function Items({ activeTab, categoryId, setCartNumber, cartNumber
     const handleClearAndAddToCart = async () => {
         setShowPopup(false)
         const cartItem = JSON.parse(localStorage.getItem('replacableItem'));
-        cartItem.path = "/clear/post/cart";
 
-        let addRes = await fetch(`https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(cartItem)
+        let addData = await apiCall('/clear/post/cart', {
+            body: cartItem
         });
-
-        let addData = await addRes.json();
-        addData = JSON.parse(addData.body);
         if(addData.error) {
             return;
         }

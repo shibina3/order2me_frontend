@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+import { apiCall } from '../../config';
 
 export default function ManageWallet(props) {
     const [loading, setLoading] = useState(true);
@@ -14,15 +15,8 @@ export default function ManageWallet(props) {
     const fetchUsers = async () => {
         setLoading(true);
         try {
-            const response = await fetch("https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/", {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ path: "/get/users" }),
-            });
-            const data = await response.json();
-            const fetchedUsers = JSON.parse(data.body);
+            const data = await apiCall('/get/users');
+            const fetchedUsers = data.body || [];
             setUsers(fetchedUsers);
         } catch (error) {
             console.error("Error fetching users:", error);
@@ -36,14 +30,9 @@ export default function ManageWallet(props) {
             return;
         }
         try {
-            const response = await fetch("https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/", {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ users: selectedUsers, amount: parseInt(amount), path: "add/wallet" }),
+            const result = await apiCall('/add/wallet', {
+                body: { users: selectedUsers, amount: parseInt(amount) }
             });
-            const result = await response.json();
             if (result.message === 'Wallets added successfully') {
                 let updatedUsers = [...users];
                 updatedUsers.forEach(user => {
@@ -68,14 +57,9 @@ export default function ManageWallet(props) {
             return;
         }
         try {
-            const response = await fetch("https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/", {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ users: selectedUsers, path: "remove/wallet" }),
+            const result = await apiCall('/remove/wallet', {
+                body: { users: selectedUsers }
             });
-            const result = await response.json();
             if (result.message === 'Wallets removed successfully') {
                 let updatedUsers = [...users];
                 updatedUsers.forEach(user => {

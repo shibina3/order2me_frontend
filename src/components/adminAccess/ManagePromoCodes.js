@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+import { apiCall } from '../../config';
 
 export default function ManagePromoCodes(props) {
     const [loading, setLoading] = useState(true);
@@ -16,15 +17,8 @@ export default function ManagePromoCodes(props) {
     const fetchPromoCodes = async () => {
         setLoading(true);
         try {
-            const response = await fetch("https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/", {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ path: "/get/promo-codes" }),
-            });
-            const data = await response.json();
-            const fetchedCodes = JSON.parse(data.body);
+            const data = await apiCall('/get/promo-codes');
+            const fetchedCodes = data.body || [];
             setPromoCodes(fetchedCodes);
         } catch (error) {
             console.error("Error fetching users:", error);
@@ -38,14 +32,9 @@ export default function ManagePromoCodes(props) {
             return;
         }
         try {
-            const response = await fetch("https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/", {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ code, discount, discount_type, path: "/add/promo-code" }),
+            const result = await apiCall('/add/promo-code', {
+                body: { code, discount, discount_type }
             });
-            const result = await response.json();
             if (result.message === 'Promo code added successfully') {
                 let updatedCodes = [...promoCodes];
                 updatedCodes.push({ id: result.id, code, discount, discount_type });
@@ -67,14 +56,9 @@ export default function ManagePromoCodes(props) {
             return;
         }
         try {
-            const response = await fetch("https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/", {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ codeIds: selectedCodes, path: "/delete/promo-code" }),
+            const result = await apiCall('/delete/promo-code', {
+                body: { codeIds: selectedCodes }
             });
-            const result = await response.json();
             if (result.message === 'Promo code deleted successfully') {
                 let updatedCodes = [...promoCodes];
                 updatedCodes = updatedCodes.filter((promo) => !selectedCodes.includes(promo.id));

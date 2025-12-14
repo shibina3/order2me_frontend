@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Alert } from 'react-bootstrap';
 import { FaHeart } from "react-icons/fa";
+import { apiCall } from '../config';
 
 export default function Wishlist({ setCartNumber }) {
     const [cartItems, setCartItems] = useState({});
@@ -13,33 +14,25 @@ export default function Wishlist({ setCartNumber }) {
             setLoading(true);
               
             // Fetch items in the cart
-            const cartRes = await fetch(`https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/`, {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({path: "/get/cart", userId: localStorage.getItem('userID'), location: localStorage.getItem('userCity') })
+            const cartRes = await apiCall('/get/cart', {
+                body: {
+                    userId: localStorage.getItem('userID'),
+                    location: localStorage.getItem('userCity')
+                }
             });
-            let cartData = await cartRes.json();
-            cartData = JSON.parse(cartData.body);
+            let cartData = cartRes.body || [];
             
             const cartMap = cartData.reduce((acc, item) => {
                 acc[item.id] = item.quantity;
                 return acc;
             }, {});
 
-            const allWishlistItemRes = await fetch(`https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/`, {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    user_id: localStorage.getItem('userID'),
-                    path: "/get/wishlist"
-                })
+            const allWishlistItemRes = await apiCall('/get/wishlist', {
+                body: {
+                    user_id: localStorage.getItem('userID')
+                }
             });
-            let allWishlistItems = await allWishlistItemRes.json();
-            allWishlistItems = JSON.parse(allWishlistItems.body);
+            let allWishlistItems = allWishlistItemRes.body || [];
             allWishlistItems = allWishlistItems.length ? allWishlistItems : [];
             
             setWishlistItems(allWishlistItems);
@@ -71,19 +64,12 @@ export default function Wishlist({ setCartNumber }) {
             quantity: 1, 
             amount: selectedPriceDetail.amount,
             product_quantity: selectedPriceDetail.quantity,
-            path: "/post/cart",
             location: localStorage.getItem('userCity')
         };
 
-        let addRes = await fetch(`https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(cartItem)
+        let addData = await apiCall('/post/cart', {
+            body: cartItem
         });
-        let addData = await addRes.json();
-        addData = JSON.parse(addData.body);
         if(addData.error) {
             setShowPopup(true);
             localStorage.setItem('replacableItem', JSON.stringify(cartItem));
@@ -97,18 +83,10 @@ export default function Wishlist({ setCartNumber }) {
     const handleClearAndAddToCart = async () => {
         setShowPopup(false)
         const cartItem = JSON.parse(localStorage.getItem('replacableItem'));
-        cartItem.path = "/clear/post/cart";
 
-        let addRes = await fetch(`https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(cartItem)
+        let addData = await apiCall('/clear/post/cart', {
+            body: cartItem
         });
-
-        let addData = await addRes.json();
-        addData = JSON.parse(addData.body);
         if(addData.error) {
             return;
         }
@@ -124,19 +102,14 @@ export default function Wishlist({ setCartNumber }) {
         const item = wishlistItems.find(item => item.id === itemId);
         const selectedPriceDetail = item.price_details.find(detail => detail.quantity === item.selectedQuantity) || item.price_details[0];
 
-        await fetch(`https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ 
+        await apiCall('/put/cart', {
+            body: {
                 quantity: newQuantity, 
                 amount: selectedPriceDetail.amount, 
                 user_id: localStorage.getItem('userID'), 
                 product_quantity: selectedPriceDetail.quantity,
-                itemId: itemId, 
-                path: "/put/cart" 
-            })
+                itemId: itemId
+            }
         });
         let newCartItems = { ...cartItems, [itemId]: newQuantity };
         setCartItems(newCartItems);
@@ -151,30 +124,24 @@ export default function Wishlist({ setCartNumber }) {
         const selectedPriceDetail = item.price_details.find(detail => detail.quantity === item.selectedQuantity) || item.price_details[0];
 
         if (newQuantity > 0) {
-            await fetch(`https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/`, {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ 
-                    path: "/put/cart", 
+            await apiCall('/put/cart', {
+                body: {
                     quantity: newQuantity, 
                     amount: selectedPriceDetail.amount, 
                     product_quantity: selectedPriceDetail.quantity,
                     itemId: itemId,
-                    user_id: localStorage.getItem('userID') 
-                })
+                    user_id: localStorage.getItem('userID')
+                }
             });
             let newCartItems = { ...cartItems, [itemId]: newQuantity };
             setCartItems(newCartItems);
             setCartNumber(Object.values(newCartItems).reduce((sum, item) => sum + item, 0));
         } else {
-            await fetch(`https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/`, {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ path: "/delete/cart", user_id: localStorage.getItem('userID'), id: itemId })
+            await apiCall('/delete/cart', {
+                body: {
+                    user_id: localStorage.getItem('userID'),
+                    id: itemId
+                }
             });
             const updatedCartItems = { ...cartItems };
             delete updatedCartItems[itemId];
@@ -186,16 +153,11 @@ export default function Wishlist({ setCartNumber }) {
     const handleAddRemoveWishist = async (itemId) => {
         const payload = {
             user_id: localStorage.getItem('userID'),
-            item_id: itemId,
-            path: "/delete/wishlist"
+            item_id: itemId
         };
 
-        await fetch(`https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(payload)
+        await apiCall('/delete/wishlist', {
+            body: payload
         });
         
         setWishlistItems((prev) => prev.filter(wish => wish.id !== itemId));

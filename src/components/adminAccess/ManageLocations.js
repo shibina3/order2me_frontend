@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Button, ListGroup, Form, InputGroup } from 'react-bootstrap';
+import { apiCall } from '../../config';
 
 const ManageLocations = (props) => {
   const [locations, setLocations] = useState([]); 
@@ -17,17 +18,14 @@ const ManageLocations = (props) => {
 
   const fetchLocations = () => {
     setTimeout(async () => {
-        const getLocRes = await fetch(`https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({path: "/get/location" }),
-          });
-          let getLocData = await getLocRes.json();
-          getLocData = JSON.parse(getLocData?.body || []);
-      setLocations(getLocData);
-      setLoading(false);
+        try {
+          const getLocRes = await apiCall('/get/location');
+          let getLocData = getLocRes.body || [];
+          setLocations(getLocData);
+        } catch (error) {
+          console.error("Error fetching locations:", error);
+        }
+        setLoading(false);
     }, 1000); 
   };
 
@@ -36,33 +34,30 @@ const ManageLocations = (props) => {
       alert('Please enter a location name');
       return;
     }
-    const addLocRes = await fetch(`https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({path: "/add/location", name: newLocation }),
-    });
-    let addLocData = await addLocRes.json();
-    if (addLocData.message === "Location Added") {
-      setLocations([...locations, { id: locations.length + 1, name: newLocation }]);
-      setNewLocation(''); 
-      setShowAddLocationForm(false);
+    try {
+      const addLocData = await apiCall('/add/location', {
+        body: { name: newLocation }
+      });
+      if (addLocData.message === "Location Added") {
+        setLocations([...locations, { id: locations.length + 1, name: newLocation }]);
+        setNewLocation(''); 
+        setShowAddLocationForm(false);
+      }
+    } catch (error) {
+      console.error("Error adding location:", error);
     }
   };
 
   const handleDeleteLocation = async (id) => {
-    const deleteLocRes = await fetch(`https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ id: id, path: "/delete/location" }),
-    });
-    let deleteLocData = await deleteLocRes.json();
-    deleteLocData = JSON.parse(deleteLocData.message);
-    if (deleteLocData.message === "Location Deleted") {
-      setLocations(locations.filter(location => location.id !== id));
+    try {
+      const deleteLocData = await apiCall('/delete/location', {
+        body: { id: id }
+      });
+      if (deleteLocData.message === "Location Deleted") {
+        setLocations(locations.filter(location => location.id !== id));
+      }
+    } catch (error) {
+      console.error("Error deleting location:", error);
     }
   };
 

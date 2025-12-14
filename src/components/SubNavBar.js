@@ -1,23 +1,22 @@
 import React, { useState, useEffect } from 'react';
+import { API_ENDPOINTS, apiCall } from '../config';
 
 const SubNavbar = ({ setActiveTab, activeTab, setCategoryId }) => {
   const [tabs, setTabs] = useState([]);
 
   useEffect(() => {
     async function fetchTabs() {
-      const res = await fetch("https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/", {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({path: "/get/categories", location: localStorage.getItem('userCity')}),
-      });
-      let data = await res.json();
-      data = JSON.parse(data.body);
-      data = data.filter(cat => cat.location === localStorage.getItem('userCity'))
-      data = data.sort((a,b) => a.id - b.id)
-      console.log(data);
-      setTabs(data);
+      try {
+        const data = await fetch(`${API_ENDPOINTS.GET_CATEGORIES}?location=${localStorage.getItem('userCity')}`);
+        let result = await data.json();
+        result = result.body || [];
+        result = result.filter(cat => cat.location === localStorage.getItem('userCity'));
+        result = result.sort((a,b) => a.id - b.id);
+        console.log(result);
+        setTabs(result);
+      } catch (error) {
+        console.error("Error fetching categories:", error);
+      }
     }
 
     fetchTabs();

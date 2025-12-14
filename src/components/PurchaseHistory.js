@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Container, Row, Col, Card, Alert, ListGroup, Badge } from 'react-bootstrap';
+import { apiCall } from '../config';
 
 const PurchaseHistory = () => {
   const [purchases, setPurchases] = useState([]);
@@ -8,17 +9,15 @@ const PurchaseHistory = () => {
   useEffect( () => {
     const fetchData = async () => {
       setLoading(true);
-      const purchaseRes = await fetch(`https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({userId: localStorage.getItem('userID'), path: "/get/purchases"})
-      });
-      let purchaseData = await purchaseRes.json();
-      purchaseData = JSON.parse(purchaseData.body);
-      
-      setPurchases(purchaseData);
+      try {
+        const purchaseRes = await apiCall('/get/purchases', {
+          body: { userId: localStorage.getItem('userID') }
+        });
+        let purchaseData = purchaseRes.body || [];
+        setPurchases(purchaseData);
+      } catch (error) {
+        console.error("Error fetching purchases:", error);
+      }
       setLoading(false);
     }
     fetchData();

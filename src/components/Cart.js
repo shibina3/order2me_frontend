@@ -3,6 +3,7 @@ import { Container, Row, Col, Card, Button, Form, Alert } from 'react-bootstrap'
 import { FaTrash } from 'react-icons/fa';
 import { IoMdAdd } from "react-icons/io";
 import { AiOutlineMinus } from "react-icons/ai";
+import { apiCall } from '../config';
 
 const Cart = (props) => {
   const [cartItems, setCartItems] = useState([]);
@@ -15,19 +16,15 @@ const Cart = (props) => {
     async function fetchData() {      
       setLoading(true);
       try {
-        const cartItemsRes = await fetch(`https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({userId: localStorage.getItem('userID'), path: "/get/cart", location: localStorage.getItem('userCity')})
+        const cartItemsRes = await apiCall('/get/cart', {
+          body: {
+            userId: localStorage.getItem('userID'),
+            location: localStorage.getItem('userCity')
+          }
         });
 
-        if (!cartItemsRes.ok) throw new Error("Failed to fetch cart items");
-
-        let storedCart = await cartItemsRes.json();       
-        setAppStatus(storedCart.app_status); 
-        storedCart = JSON.parse(storedCart.body);
+        setAppStatus(cartItemsRes.app_status); 
+        let storedCart = cartItemsRes.body || [];
         props.setCartNumber(storedCart.reduce((sum, item) => sum + item.quantity, 0));
         storedCart = storedCart.filter(cart => cart.stock === "in-stock");
         setCartItems(storedCart);
@@ -50,18 +47,14 @@ const Cart = (props) => {
     const item = cartItems[index];    
 
     try {
-      await fetch(`https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ 
+      await apiCall('/put/cart', {
+        body: {
           quantity, 
           amount: item.amount, 
           user_id: localStorage.getItem('userID'), 
           product_quantity: item.price_quantity,
-          path: "/put/cart", 
-          itemId: item.item_id })
+          itemId: item.item_id
+        }
       });
 
       const updatedCartItems = [...cartItems];
@@ -80,12 +73,11 @@ const Cart = (props) => {
     const item = cartItems[index];
 
     try {
-      await fetch(`https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ user_id: localStorage.getItem('userID'), path: "/delete/cart", id: item.item_id })
+      await apiCall('/delete/cart', {
+        body: {
+          user_id: localStorage.getItem('userID'),
+          id: item.item_id
+        }
       });
 
       const updatedCartItems = cartItems.filter((_, i) => i !== index);

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Accordion, Button, Card, Form, ListGroup } from 'react-bootstrap';
+import { apiCall } from '../../config';
 
 const DeliveryPartnerDashboard = (props) => {
     const [orders, setOrders] = useState(null);
@@ -11,33 +12,21 @@ const DeliveryPartnerDashboard = (props) => {
 // eslint-disable-next-line
       useEffect(() => {
         const fetchOrders = async () => {
-          const allOrdersRes = await fetch("https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/", {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Accept': 'application/json',
-            },
-            body: JSON.stringify({ path: "/get/orders" }),
-          });
-          let allOrders = await allOrdersRes.json();
-          allOrders = JSON.parse(allOrders.body);
-          allOrders = allOrders.sort((a, b) => a.id - b.id);
-          setOrders(allOrders);
-  
-          const allDelivers = await fetch("https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/", {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json',
-              },
-              body: JSON.stringify({ path: "/get/delivers" }),
-            });
-            let delivers = await allDelivers.json();
-            delivers = JSON.parse(delivers.body);
+          try {
+            const allOrdersRes = await apiCall('/get/orders');
+            let allOrders = allOrdersRes.body || [];
+            allOrders = allOrders.sort((a, b) => a.id - b.id);
+            setOrders(allOrders);
+    
+            const allDelivers = await apiCall('/get/delivers');
+            let delivers = allDelivers.body || [];
             // eslint-disable-next-line
             delivers = delivers.filter(del => del.delivery_partner_id == myID);
             
             setDeliveries(delivers);
+          } catch (error) {
+            console.error("Error fetching orders:", error);
+          }
         };
         fetchOrders();
         // eslint-disable-next-line
@@ -84,26 +73,25 @@ const DeliveryPartnerDashboard = (props) => {
             setOtpError("OTP must be 6 digits");
             return false;
         }
-        const res = await fetch("https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/", {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ path: "/verify/otp", otp, order_id }),
-        });
+        try {
+          const data = await apiCall('/verify/otp', {
+            body: { otp, order_id }
+          });
+          const verified = data?.success;
 
-        let data = await res.json();
-        data = JSON.parse(data.body);
-        const verified = data?.success;
+          if (!verified) {
+              setOtpError("Invalid OTP");
+              return false;
+          }
 
-        if (!verified) {
-            setOtpError("Invalid OTP");
-            return false;
+          setOtpError(""); 
+          setOtp("");
+          return true;
+        } catch (error) {
+          console.error("Error verifying OTP:", error);
+          setOtpError("Error verifying OTP");
+          return false;
         }
-
-        setOtpError(""); 
-        setOtp("");
-        return true;
     };
 
   const moveStatus = async (status, order_id) => {
@@ -112,19 +100,16 @@ const DeliveryPartnerDashboard = (props) => {
         if (!otpValid) return;
     }
     let nextStatus = status === 'declined' ? status : order_status[order_status.indexOf(status) +1];
-    let payload = { path: "/change/order_status", status:nextStatus, order_id };
-
-    let res = await fetch("https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/", {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
+    try {
+      const data = await apiCall('/change/order_status', {
+        body: { status: nextStatus, order_id }
       });
-      let data = await res.json();
-      data = JSON.parse(data.body);
-      data = data.sort((a, b) => a.id - b.id);
-      setOrders(data);
+      let ordersData = data.body || [];
+      ordersData = ordersData.sort((a, b) => a.id - b.id);
+      setOrders(ordersData);
+    } catch (error) {
+      console.error("Error updating order status:", error);
+    }
   }
 
   return (

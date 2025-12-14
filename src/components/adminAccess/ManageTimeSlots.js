@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Button, ListGroup, Form, InputGroup } from 'react-bootstrap';
+import { apiCall } from '../../config';
 
 const ManageTimeSlots = (props) => {
   const [timeSlots, setTimeSlots] = useState([]); 
@@ -20,15 +21,8 @@ const ManageTimeSlots = (props) => {
 
   const fetchTimeSlots = () => {
     setTimeout(async () => {
-        const getTSRes = await fetch(`https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({path: "/get/time_slots" }),
-          });
-        let getTSData = await getTSRes.json();
-        getTSData = JSON.parse(getTSData?.body || []);
+        const getTSRes = await apiCall('/get/time_slots');
+        let getTSData = getTSRes.body || [];
         getTSData = getTSData.sort((a, b) => a.from_time.localeCompare(b.from_time));
         setTimeSlots(getTSData);
         setLoading(false);
@@ -40,15 +34,10 @@ const ManageTimeSlots = (props) => {
       alert('Please enter a time slot');
       return;
     }
-    const addtimeSlotRes = await fetch(`https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({path: "/add/time_slot", time_slot: newtimeSlot }),
+    const addtimeSlotData = await apiCall('/add/time_slot', {
+      body: { time_slot: newtimeSlot }
     });
-    let addtimeSlotData = await addtimeSlotRes.json();
-    let updatedTimeSlots = JSON.parse(addtimeSlotData.body);
+    let updatedTimeSlots = addtimeSlotData.body || [];
     updatedTimeSlots = updatedTimeSlots.sort((a, b) => a.from_time.localeCompare(b.from_time));
     if (addtimeSlotData.message === "Time Slot Added") {
       setTimeSlots(updatedTimeSlots);
@@ -61,15 +50,10 @@ const ManageTimeSlots = (props) => {
   };
 
   const handleDeleteTimeSlot = async (id) => {
-    const deleteTSRes = await fetch(`https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ id: id, path: "/delete/time_slot" }),
+    const deleteTSData = await apiCall('/delete/time_slot', {
+      body: { id: id }
     });
-    let deleteTSData = await deleteTSRes.json();
-    let updatedTS = JSON.parse(deleteTSData.body);
+    let updatedTS = deleteTSData.body || [];
     updatedTS = updatedTS.sort((a, b) => a.from_time.localeCompare(b.from_time));
     if (deleteTSData.message === "Time Slot Deleted") {
       setTimeSlots(updatedTS);

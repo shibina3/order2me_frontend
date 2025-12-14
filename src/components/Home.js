@@ -1,6 +1,7 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { Carousel, Card, Button } from 'react-bootstrap';
 import { FaArrowLeft, FaArrowRight, FaFacebook, FaInstagram, FaWhatsapp, FaRegHeart, FaHeart, FaRegArrowAltCircleRight } from 'react-icons/fa';
+import { API_ENDPOINTS, apiCall } from '../config';
 
 const HomePage = ({ setActiveTab, setCategoryId, setCartNumber, cartNumber, setActivePage }) => {
   const [popularItems, setPopularItems] = useState([]);
@@ -16,93 +17,82 @@ const HomePage = ({ setActiveTab, setCategoryId, setCartNumber, cartNumber, setA
 
   useEffect(() => {
     async function fetchData() {
-      // Fetch all items
-      const allItemsRes = await fetch("https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/", {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-        body: JSON.stringify({ path: "/get/items" })
-      });
-      let allItems = await allItemsRes.json();
-      allItems = JSON.parse(allItems.body);
-      allItems = allItems.filter(cat => cat.location === localStorage.getItem('userCity'))
-      const popular_items = allItems.filter(item => item.popular_item);
-      const new_arrivals = allItems.filter(item => item.new_arrival);
+      try {
+        // Fetch all items
+        const allItemsRes = await apiCall('/get/items');
+        let allItems = allItemsRes.body || [];
+        allItems = allItems.filter(cat => cat.location === localStorage.getItem('userCity'));
+        const popular_items = allItems.filter(item => item.popular_item);
+        const new_arrivals = allItems.filter(item => item.new_arrival);
 
-      setPopularItems(popular_items);
-      setNewArrivals(new_arrivals);
+        setPopularItems(popular_items);
+        setNewArrivals(new_arrivals);
+      } catch (error) {
+        console.error("Error fetching items:", error);
+      }
 
-      // Fetch all categories
-      const allCategoriesRes = await fetch("https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/", {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-        body: JSON.stringify({ path: "/get/categories", location: localStorage.getItem('userCity') })
-      });
-      let allCategories = await allCategoriesRes.json();
-      setAppStatus(allCategories.app_status);
-      allCategories = JSON.parse(allCategories.body);
-      allCategories = allCategories.filter(cat => cat.location === localStorage.getItem('userCity'))
-      allCategories = allCategories.sort((a, b) => a.id - b.id);
+      try {
+        // Fetch all categories
+        const allCategoriesRes = await fetch(`${API_ENDPOINTS.GET_CATEGORIES}?location=${localStorage.getItem('userCity')}`);
+        let allCategories = await allCategoriesRes.json();
+        setAppStatus(allCategories.app_status);
+        allCategories = allCategories.body || [];
+        allCategories = allCategories.filter(cat => cat.location === localStorage.getItem('userCity'));
+        allCategories = allCategories.sort((a, b) => a.id - b.id);
 
-      setCategories(allCategories);
+        setCategories(allCategories);
+      } catch (error) {
+        console.error("Error fetching categories:", error);
+      }
 
-      // Fetch cart items
-      const cartRes = await fetch(`https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ path: "/get/cart", userId: localStorage.getItem('userID'), location: localStorage.getItem('userCity') })
-      });
-      let cartData = await cartRes.json();
-      cartData = JSON.parse(cartData.body);
-      setCartNumber(cartData.reduce((sum, item) => sum + item.quantity, 0));
+      try {
+        // Fetch cart items
+        const cartRes = await apiCall('/get/cart', {
+          body: {
+            userId: localStorage.getItem('userID'),
+            location: localStorage.getItem('userCity')
+          }
+        });
+        let cartData = cartRes.body || [];
+        setCartNumber(cartData.reduce((sum, item) => sum + item.quantity, 0));
 
-      const cartItemsMap = cartData.reduce((acc, item) => {
-        acc[item.item_id] = item.quantity;
-        return acc;
-      }, {});
-      setCartItems(cartItemsMap);
+        const cartItemsMap = cartData.reduce((acc, item) => {
+          acc[item.item_id] = item.quantity;
+          return acc;
+        }, {});
+        setCartItems(cartItemsMap);
+      } catch (error) {
+        console.error("Error fetching cart:", error);
+      }
 
-      // fetch contact details
-      const contactDetRes = await fetch(`https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ path: "/contact/details" })
-      });
-      let contactDetData = await contactDetRes.json();
-      contactDetData = JSON.parse(contactDetData.body);
-      setDetails(contactDetData);
+      try {
+        // fetch contact details
+        const contactDetData = await apiCall('/contact/details');
+        setDetails(contactDetData.body || []);
+      } catch (error) {
+        console.error("Error fetching contact details:", error);
+      }
+
+      setLoading(false);
     }
 
     fetchData();
-    setLoading(false);
   }, [setCartNumber]);
 
   useEffect(() => {
     const fetchWishlist = async () => {
-
-      const allWishlistItemRes = await fetch(`https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          user_id: localStorage.getItem('userID'),
-          path: "/get/wishlist"
-        })
-      });
-      let allWishlistItems = await allWishlistItemRes.json();
-      allWishlistItems = JSON.parse(allWishlistItems.body);
-      allWishlistItems = allWishlistItems.length ? allWishlistItems.map(wish => wish.id) : [];
-      setWishlistItems(allWishlistItems);
+      try {
+        const allWishlistItemRes = await apiCall('/get/wishlist', {
+          body: {
+            user_id: localStorage.getItem('userID')
+          }
+        });
+        let allWishlistItems = allWishlistItemRes.body || [];
+        allWishlistItems = allWishlistItems.length ? allWishlistItems.map(wish => wish.id) : [];
+        setWishlistItems(allWishlistItems);
+      } catch (error) {
+        console.error("Error fetching wishlist:", error);
+      }
     }
     fetchWishlist();
   }, []);
@@ -125,19 +115,14 @@ const HomePage = ({ setActiveTab, setCategoryId, setCartNumber, cartNumber, setA
     item.selectedQuantity = selectedQuantities[itemId] ? item.price_details[selectedQuantities[itemId]].quantity : item.price_details[0].quantity;
     const selectedPriceDetail = item.price_details.find(detail => detail.quantity === item.selectedQuantity) || item.price_details[0];
 
-    await fetch(`https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
+    await apiCall('/put/cart', {
+      body: {
         quantity: newQuantity,
         amount: selectedPriceDetail.amount,
         user_id: localStorage.getItem('userID'),
         product_quantity: selectedPriceDetail.quantity,
-        itemId: itemId,
-        path: "/put/cart"
-      })
+        itemId: itemId
+      }
     });
     let newCartItems = { ...cartItems, [itemId]: newQuantity };
     setCartItems(newCartItems);
@@ -153,33 +138,24 @@ const HomePage = ({ setActiveTab, setCategoryId, setCartNumber, cartNumber, setA
     const selectedPriceDetail = item.price_details.find(detail => detail.quantity === item.selectedQuantity) || item.price_details[0];
 
     if (newQuantity > 0) {
-      await fetch(`https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
+      await apiCall('/put/cart', {
+        body: {
           quantity: newQuantity,
           amount: selectedPriceDetail.amount,
           user_id: localStorage.getItem('userID'),
           product_quantity: selectedPriceDetail.quantity,
-          itemId: itemId,
-          path: "/put/cart"
-        })
+          itemId: itemId
+        }
       });
       let newCartItems = { ...cartItems, [itemId]: newQuantity };
       setCartItems(newCartItems);
       setCartNumber(Object.values(newCartItems).reduce((sum, item) => sum + item, 0));
     } else {
-      await fetch(`https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          user_id: localStorage.getItem('userID'), id: itemId,
-          path: "/delete/cart"
-        })
+      await apiCall('/delete/cart', {
+        body: {
+          user_id: localStorage.getItem('userID'),
+          id: itemId
+        }
       });
       const updatedCartItems = { ...cartItems };
       delete updatedCartItems[itemId];
@@ -203,19 +179,12 @@ const HomePage = ({ setActiveTab, setCategoryId, setCartNumber, cartNumber, setA
       quantity: 1,
       amount: selectedPriceDetail.amount,
       product_quantity: selectedPriceDetail.quantity,
-      path: "/post/cart",
       location: localStorage.getItem('userCity')
     };
 
-    let addRes = await fetch(`https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(cartItem)
+    let addData = await apiCall('/post/cart', {
+      body: cartItem
     });
-    let addData = await addRes.json();
-    addData = JSON.parse(addData.body);
     if (addData.error) {
       setShowPopup(true);
       localStorage.setItem('replacableItem', JSON.stringify(cartItem));
@@ -230,18 +199,10 @@ const HomePage = ({ setActiveTab, setCategoryId, setCartNumber, cartNumber, setA
   const handleClearAndAddToCart = async () => {
     setShowPopup(false)
     const cartItem = JSON.parse(localStorage.getItem('replacableItem'));
-    cartItem.path = "/clear/post/cart";
 
-    let addRes = await fetch(`https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(cartItem)
+    let addData = await apiCall('/clear/post/cart', {
+      body: cartItem
     });
-
-    let addData = await addRes.json();
-    addData = JSON.parse(addData.body);
     if(addData.error) {
         return;
     }
@@ -266,16 +227,11 @@ const HomePage = ({ setActiveTab, setCategoryId, setCartNumber, cartNumber, setA
   const handleAddRemoveWishist = async (itemId, wishlistFlag) => {
     const payload = {
       user_id: localStorage.getItem('userID'),
-      item_id: itemId,
-      path: wishlistFlag ? "/add/wishlist" : "/delete/wishlist"
+      item_id: itemId
     };
 
-    await fetch(`https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(payload)
+    await apiCall(wishlistFlag ? '/add/wishlist' : '/delete/wishlist', {
+      body: payload
     });
 
     if (wishlistFlag) {

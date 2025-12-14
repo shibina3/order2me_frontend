@@ -7,6 +7,7 @@ import { BsCartCheckFill } from "react-icons/bs";
 import { IoMdLogOut } from "react-icons/io";
 import { RiAdminFill } from "react-icons/ri";
 import { MdDeliveryDining } from "react-icons/md";
+import { apiCall } from '../config';
 
 const AppNavbar = (props) => {
   const [showBreadcrumb, setShowBreadcrumb] = useState(false);
@@ -18,22 +19,21 @@ const AppNavbar = (props) => {
 
   useEffect( () => {
     const fetchData = async () => {
-      const userDetailRes = await fetch(`https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({email: localStorage.getItem('email'), path: "/get/user-detail"})
-      });
-      let userData = await userDetailRes.json();
-      userData = JSON.parse(userData.body);      
-      if(userData.data.admin) {
-        setAdmin(true);
+      try {
+        const userDetailRes = await apiCall('/get/user-detail', {
+          body: { email: localStorage.getItem('email') }
+        });
+        let userData = userDetailRes.body || {};
+        if(userData.data?.admin) {
+          setAdmin(true);
+        }
+        if(userData.data?.delivery_partner) {
+          setDeliveryPartner(true);
+        }
+        setWallet(userData.data?.wallet || 0);
+      } catch (error) {
+        console.error("Error fetching user details:", error);
       }
-      if(userData.data.delivery_partner) {
-        setDeliveryPartner(true);
-      }
-      setWallet(userData.data.wallet);
     }
     fetchData();
   }, []);

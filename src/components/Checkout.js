@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from 'react-bootstrap';
+import { apiCall } from '../config';
 
 const Checkout = ({ setActivePage, city, setCartNumber }) => {
   const [address, setAddress] = useState(localStorage.getItem('address') || '');
@@ -26,45 +27,43 @@ const Checkout = ({ setActivePage, city, setCartNumber }) => {
 
   useEffect(() => {
     async function fetchItems() {
-      const cartRes = await fetch(`https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ userId: localStorage.getItem('userID'), path: "/get/cart", location: localStorage.getItem('userCity') }),
-      });
-      let cartData = await cartRes.json();
-      setWallet(cartData.wallet);
-      cartData = JSON.parse(cartData.body);
-      setItems(cartData);
+      try {
+        const cartRes = await apiCall('/get/cart', {
+          body: {
+            userId: localStorage.getItem('userID'),
+            location: localStorage.getItem('userCity')
+          }
+        });
+        setWallet(cartRes.wallet);
+        let cartData = cartRes.body || [];
+        setItems(cartData);
 
-      const total = cartData.reduce((sum, item) => sum + item.amount * item.quantity, 0);
-      setTotalforWallet(total);
-      setTotalAmount(total);
+        const total = cartData.reduce((sum, item) => sum + item.amount * item.quantity, 0);
+        setTotalforWallet(total);
+        setTotalAmount(total);
+      } catch (error) {
+        console.error("Error fetching cart:", error);
+      }
 
-      const fetchDeliveryfee = await fetch(`https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ city: city, path: "/get/delivery_fee" }),
-      });
-      let delivery_fee = await fetchDeliveryfee.json();
-      delivery_fee = JSON.parse(delivery_fee.body);
-      setAllDeliveryFee(delivery_fee);
-      setDeliveryFee(parseInt(delivery_fee[0].delivery_fee));
+      try {
+        const fetchDeliveryfee = await apiCall('/get/delivery_fee', {
+          body: { city: city }
+        });
+        let delivery_fee = fetchDeliveryfee.body || [];
+        setAllDeliveryFee(delivery_fee);
+        setDeliveryFee(parseInt(delivery_fee[0].delivery_fee));
+      } catch (error) {
+        console.error("Error fetching delivery fee:", error);
+      }
 
-      const fetchTimeSlots = await fetch(`https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ path: "/get/time_slots" }),
-      });
-      let timeSlots = await fetchTimeSlots.json();
-      timeSlots = JSON.parse(timeSlots.body);
-      setTimeSlots(timeSlots);
-      setSelectedTimeSlot(timeSlots[0].from_time + ' - ' + timeSlots[0].to_time);
+      try {
+        const fetchTimeSlots = await apiCall('/get/time_slots');
+        let timeSlots = fetchTimeSlots.body || [];
+        setTimeSlots(timeSlots);
+        setSelectedTimeSlot(timeSlots[0].from_time + ' - ' + timeSlots[0].to_time);
+      } catch (error) {
+        console.error("Error fetching time slots:", error);
+      }
     }
 
     fetchItems();
@@ -114,29 +113,27 @@ const Checkout = ({ setActivePage, city, setCartNumber }) => {
       alert('Please select a time slot and area');
       return;
     }
-    const placeOrderRes = await fetch(`https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        user_id: localStorage.getItem('userID'),
-        address: address,
-        phone_number: phoneNumber,
-        payment_method: paymentMethod,
-        items: items,
-        selectedTimeSlot: selectedTimeSlot,
-        instructions: instructions,
-        path: "/post/orders",
-        useWallet: useWallet,
-      }),
-    });
-    let placeOrder = await placeOrderRes.json();
-    placeOrder = JSON.parse(placeOrder.body);
+    try {
+      const placeOrder = await apiCall('/post/orders', {
+        body: {
+          user_id: localStorage.getItem('userID'),
+          address: address,
+          phone_number: phoneNumber,
+          payment_method: paymentMethod,
+          items: items,
+          selectedTimeSlot: selectedTimeSlot,
+          instructions: instructions,
+          useWallet: useWallet
+        }
+      });
 
-    if (placeOrder?.message) {
-      setCartNumber(0);
-      setActivePage('order_placed');
+      if (placeOrder?.message) {
+        setCartNumber(0);
+        setActivePage('order_placed');
+      }
+    } catch (error) {
+      console.error("Error placing order:", error);
+      alert('Error placing order. Please try again.');
     }
   };
 
@@ -147,18 +144,11 @@ const Checkout = ({ setActivePage, city, setCartNumber }) => {
 
   const applyPromoCode = async () => {
     setApplyBtnText('Applying...');
-    const applyPromoCodeRes = await fetch(`https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        code: promoCode,
-        path: 'get/promo-code'
-      }),
-    });
-    let promoCodeData = await applyPromoCodeRes.json();
-    promoCodeData = JSON.parse(promoCodeData.body);
+    try {
+      const promoCodeRes = await apiCall('/get/promo-code', {
+        body: { code: promoCode }
+      });
+      let promoCodeData = promoCodeRes.body || [];
 
     if (promoCodeData.length) {
       promoCodeData = promoCodeData[0];
@@ -174,7 +164,11 @@ const Checkout = ({ setActivePage, city, setCartNumber }) => {
       alert('Invalid promo code');
       setApplyBtnText('Apply');
     }
-
+    } catch (error) {
+      console.error("Error applying promo code:", error);
+      alert('Error applying promo code');
+      setApplyBtnText('Apply');
+    }
   }
 
   const isFormComplete = address && phoneNumber && phoneNumber.length === 10 && paymentMethod;

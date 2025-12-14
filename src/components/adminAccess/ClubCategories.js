@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { Button } from 'react-bootstrap';
+import { API_ENDPOINTS, apiCall } from '../../config';
 
 export default function ClubCategories(props) {
     const [categories, setCategories] = useState([]);
@@ -9,16 +10,9 @@ export default function ClubCategories(props) {
 
     useEffect(() => {
         const fetchCategories = async () => {
-            const allCategoriesRes = await fetch("https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/", {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json',
-                },
-                body: JSON.stringify({ path: "/get/categories", location: localStorage.getItem('userCity') }),
-            });
+            const allCategoriesRes = await fetch(`${API_ENDPOINTS.GET_CATEGORIES}?location=${localStorage.getItem('userCity')}`);
             let allCategories = await allCategoriesRes.json();
-            allCategories = JSON.parse(allCategories.body);
+            allCategories = allCategories.body || [];
             allCategories = allCategories.sort((a, b) => a.order - b.order);
 
             const groupedCategories = allCategories.reduce((acc, category) => {
@@ -29,15 +23,8 @@ export default function ClubCategories(props) {
               
               setCategories(groupedCategories);
 
-              const getClubbedCategoriesRes = await fetch("https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/", {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ path: "/clubbed/categories" }),
-              });
-              let clubbedCategories = await getClubbedCategoriesRes.json();
-              clubbedCategories = JSON.parse(clubbedCategories.body);
+              const getClubbedCategoriesRes = await apiCall('/clubbed/categories');
+              let clubbedCategories = getClubbedCategoriesRes.body || [];
               clubbedCategories = clubbedCategories.reduce((acc, category) => {
                 acc[category.location] = acc[category.location] || [];
                 acc[category.location].push(category);
@@ -47,15 +34,8 @@ export default function ClubCategories(props) {
               console.log("clubbedCategories", clubbedCategories);
               
           
-              let locRes = await fetch("https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/", {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ path: "/get/location" }),
-              });
-              let allLoc = await locRes.json();
-              allLoc = JSON.parse(allLoc.body);
+              let locRes = await apiCall('/get/location');
+              let allLoc = locRes.body || [];
               allLoc = allLoc?.map(loc => loc.name);
               setLocations(allLoc);
         };
@@ -63,16 +43,10 @@ export default function ClubCategories(props) {
     }, []);
 
     const handleClubCategories = async (location) => {
-        const clubbedCategoriesRes = await fetch("https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/", {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json',
-            },
-            body: JSON.stringify({ path: "/club/categories", categories: selectedCategories, location }),
+        const clubbedCategoriesRes = await apiCall('/club/categories', {
+            body: { categories: selectedCategories, location }
         });
-        let clubbedCategories = await clubbedCategoriesRes.json();
-        clubbedCategories = JSON.parse(clubbedCategories.body);
+        let clubbedCategories = clubbedCategoriesRes.body || [];
         clubbedCategories = clubbedCategories.reduce((acc, category) => {
             acc[category.location] = acc[category.location] || [];
             acc[category.location].push(category);
@@ -85,16 +59,10 @@ export default function ClubCategories(props) {
     }
 
     const handleUnClubCategories = async (id) => {
-        const unClubbedCategoriesRes = await fetch("https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/", {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json',
-            },
-            body: JSON.stringify({ path: "/unclub/categories", id }),
+        const unClubbedCategoriesRes = await apiCall('/unclub/categories', {
+            body: { id }
         });
-        let unClubbedCategories = await unClubbedCategoriesRes.json();
-        unClubbedCategories = JSON.parse(unClubbedCategories.body);
+        let unClubbedCategories = unClubbedCategoriesRes.body || [];
         unClubbedCategories = unClubbedCategories.reduce((acc, category) => {
             acc[category.location] = acc[category.location] || [];
             acc[category.location].push(category);

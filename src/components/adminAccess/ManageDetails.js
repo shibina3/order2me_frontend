@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'; 
 import { Button, Form, InputGroup } from 'react-bootstrap';
+import { apiCall } from '../../config';
 
 const ManageDetails = (props) => {
   const [details, setDetails] = useState([]);
@@ -13,15 +14,8 @@ const ManageDetails = (props) => {
   const fetchDetails = async () => {
     setLoading(true);
     try {
-      const response = await fetch("https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/", {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ path: "/contact/details" }),
-      });
-      const data = await response.json();
-      const fetchedDetails = JSON.parse(data.body);
+      const data = await apiCall('/contact/details');
+      const fetchedDetails = data.body || [];
 
       // Set the details and initialize updatedDetails with values
       let initialDetails = fetchedDetails.map(data => ({
@@ -49,14 +43,9 @@ const ManageDetails = (props) => {
 
   const handleSave = async () => {
     try {
-      const response = await fetch("https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/", {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ details: updatedDetails, path: "/update/details" }), 
+      const result = await apiCall('/update/details', {
+        body: { details: updatedDetails }
       });
-      const result = await response.json();
       if (result.message === 'Details updated') {
         console.log('Details updated successfully!');
       }

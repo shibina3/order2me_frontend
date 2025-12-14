@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'; 
 import { Accordion, Alert, Button, Form, InputGroup } from 'react-bootstrap';
+import { apiCall } from '../../config';
 
 const ManageDeliveryCharges = (props) => {
   const [areaDetails, setAreaDetails] = useState([]);
@@ -24,27 +25,13 @@ const ManageDeliveryCharges = (props) => {
   const fetchAreaDetails = async () => {
     setLoading(true);
     try {
-      const response = await fetch("https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/", {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ path: "/get/delivery_charges" }),
-      });
-      const data = await response.json();
-      const fetchedAreaDetails = JSON.parse(data.body);
+      const data = await apiCall('/get/delivery_charges');
+      const fetchedAreaDetails = data.body || [];
 
       setAreaDetails(fetchedAreaDetails);
 
-      let locRes = await fetch("https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/", {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ path: "/get/location" }),
-      });
-      let allLoc = await locRes.json();
-      allLoc = JSON.parse(allLoc.body);
+      let locRes = await apiCall('/get/location');
+      let allLoc = locRes.body || [];
       allLoc = allLoc?.map(loc => loc.name);
       setLocations(allLoc);
 
@@ -82,18 +69,14 @@ const ManageDeliveryCharges = (props) => {
 
   const handleSaveNewArea = async () => {
     try {
-      const response = await fetch("https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/", {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          path: "/add/delivery_fee",
-          city: newArea.area_name, delivery_fee: newArea.delivery_fee , location: newArea.location
-        }),
+      const result = await apiCall('/add/delivery_fee', {
+        body: {
+          city: newArea.area_name,
+          delivery_fee: newArea.delivery_fee,
+          location: newArea.location
+        }
       });
-      let result = await response.json();
-      result = JSON.parse(result.body);
+      result = result.body || [];
       setAlertMessage('Area added successfully');
       setAlertType('success');
       setShow(true);
@@ -118,20 +101,14 @@ const ManageDeliveryCharges = (props) => {
 
   const handleEdit = async (area_id) => {
     try {
-      const response = await fetch("https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/", {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ 
-          path: "/update/delivery_fee", 
+      const result = await apiCall('/update/delivery_fee', {
+        body: {
           areaDetails: updatedAreaDetails[area_id],
-          area_id: area_id,
-        }), 
+          area_id: area_id
+        }
       });
-      const result = await response.json();
       if (result.message === 'Area details updated') {
-        setAreaDetails(result.body);
+        setAreaDetails(result.body || []);
         setAlertMessage('Area updated successfully');
         setAlertType('success');
         setShow(true);
@@ -146,22 +123,14 @@ const ManageDeliveryCharges = (props) => {
 
   const handleDelete = async (area_id) => {
     try {
-      const response = await fetch("https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/", {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ 
-          path: "/delete/delivery_charges", 
-          area_id: area_id,
-        }), 
+      const result = await apiCall('/delete/delivery_charges', {
+        body: { area_id: area_id }
       });
-      const result = await response.json();
       if (result.message === 'Area deleted') {
         setAlertMessage("Area deleted successfully");
         setAlertType('success');
         setShow(true);
-        setAreaDetails(JSON.parse(result.body));
+        setAreaDetails(result.body || []);
       }
     } catch (error) {
       setAlertMessage("Error deleting area:", error);

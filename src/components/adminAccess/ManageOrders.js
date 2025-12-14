@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Accordion, Button, Card, ListGroup } from 'react-bootstrap';
+import { apiCall } from '../../config';
 
 const ManageOrders = (props) => {
     const [orders, setOrders] = useState(null);
@@ -12,43 +13,19 @@ const ManageOrders = (props) => {
       }, []);
     
       const fetchOrders = async () => {
-        const allOrdersRes = await fetch("https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/", {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-          },
-          body: JSON.stringify({ path: "/get/orders" }),
-        });
-        let allOrders = await allOrdersRes.json();
-        allOrders = JSON.parse(allOrders.body);
+        const allOrdersRes = await apiCall('/get/orders');
+        let allOrders = allOrdersRes.body || [];
         allOrders = allOrders.sort((a, b) => a.id - b.id);
         setOrders(allOrders);
 
-        const allUsers = await fetch("https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/", {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Accept': 'application/json',
-            },
-            body: JSON.stringify({ path: "/get/users" }),
-          });
-          let users = await allUsers.json();
-          users = JSON.parse(users.body);
-          let delivery_partners = users.filter(user => user.delivery_partner);
-          
-          setDeliveryPartners(delivery_partners);
+        const allUsers = await apiCall('/get/users');
+        let users = allUsers.body || [];
+        let delivery_partners = users.filter(user => user.delivery_partner);
+        
+        setDeliveryPartners(delivery_partners);
 
-          const allDelivers = await fetch("https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/", {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Accept': 'application/json',
-            },
-            body: JSON.stringify({ path: "/get/delivers" }),
-          });
-          let delivers = await allDelivers.json();
-          delivers = JSON.parse(delivers.body);          
+        const allDelivers = await apiCall('/get/delivers');
+        let delivers = allDelivers.body || [];          
           setDeliveryAssigned(delivers);
       };
   const groupOrdersByStatus = (orders) => {
@@ -91,24 +68,23 @@ const ManageOrders = (props) => {
 
   const moveStatus = async (status, order_id) => {
     let nextStatus = status === 'declined' ? status : order_status[order_status.indexOf(status) +1];
-    let payload = { path: "/change/order_status", status:nextStatus, order_id };
+    let payload = { status: nextStatus, order_id };
     if(status === 'confirmed') {
       if(!selectedPartner.length) { alert('Please select a delivery partner'); return; }
         let randomOTP = Math.floor(100000 + Math.random() * 900000).toString();
         payload["delivery_partner_id"] = selectedPartner;
         payload["otp"] = randomOTP;
     }
-    let res = await fetch("https://mdsab35oki.execute-api.us-east-1.amazonaws.com/dev/", {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
+    try {
+      const data = await apiCall('/change/order_status', {
+        body: payload
       });
-      let data = await res.json();
-      data = JSON.parse(data.body);
-      data = data.sort((a, b) => a.id - b.id);
-      setOrders(data);
+      let ordersData = data.body || [];
+      ordersData = ordersData.sort((a, b) => a.id - b.id);
+      setOrders(ordersData);
+    } catch (error) {
+      console.error("Error updating order status:", error);
+    }
   }
 
   const handleDeliveryPartnerChange = (e) => {
