@@ -27,7 +27,7 @@ const Checkout = ({ setActivePage, city, setCartNumber }) => {
   const [showQrModal, setShowQrModal] = useState(false);
 
   // UPI / QR details
-  const UPI_ID = '6379103258@pthdfc';
+  const UPI_ID = 'Q332333607@ybl';
   const UPI_PAYEE = 'Order2me Fresh Mart';
   // Build UPI deep link (no inner encoding), then encode once for the QR generator
   const upiString = `upi://pay?pa=${UPI_ID}&pn=${UPI_PAYEE}&cu=INR`;
@@ -415,7 +415,7 @@ const Checkout = ({ setActivePage, city, setCartNumber }) => {
       <div className="payment-method-section mb-4">
         <h4>Payment Method</h4>
         <div>
-          <label className="mr-3 mt-3 d-flex gap-2 align-items-center">
+          <label className="mr-3 mt-3">
             <input
               type="radio"
               name="paymentMethod"
