@@ -17,17 +17,17 @@ const Login = (props) => {
       const result = await apiCall('/login', {
         body: { email, password }
       });
-      
-      if(result.message){
-        setAlertMessage(result.message);
-        setAlertType('success');
-        localStorage.setItem('email', result?.data?.email);
-        localStorage.setItem('mobile', result?.data?.mobile);
-        localStorage.setItem('name',result?.data?.username);
-        localStorage.setItem('userID', result?.data?.id);
-        props.setActivePage('home');
-      } else {
-        setAlertMessage(result.error);
+    
+    if(result.message){
+      setAlertMessage(result.message);
+      setAlertType('success');
+      localStorage.setItem('email', result?.data?.email);
+      localStorage.setItem('mobile', result?.data?.mobile);
+      localStorage.setItem('name',result?.data?.username);
+      localStorage.setItem('userID', result?.data?.id);
+      props.setActivePage('home');
+    } else {
+      setAlertMessage(result.error);
         setAlertType('danger');
       }
     } catch (error) {
@@ -42,12 +42,12 @@ const Login = (props) => {
       const result = await apiCall('/register', {
         body: { email, mobile, password, username }
       });
-      if(result.message){
-        setAlertMessage(result.message);
-        setAlertType('success');
-        setIsLogin(true);
-      } else {
-        setAlertMessage(result.error);
+    if(result.message){
+      setAlertMessage(result.message);
+      setAlertType('success');
+      setIsLogin(true);
+    } else {
+      setAlertMessage(result.error);
         setAlertType('danger');
       }
     } catch (error) {

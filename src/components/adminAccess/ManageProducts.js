@@ -26,10 +26,10 @@ const ManageProducts = (props) => {
 
       try {
         const allCategoriesRes = await fetch(`${API_ENDPOINTS.GET_CATEGORIES}?location=${localStorage.getItem('userCity')}`);
-        let allCategories = await allCategoriesRes.json();
+      let allCategories = await allCategoriesRes.json();
         allCategories = allCategories.body || [];
-        allCategories = allCategories.sort((a, b) => a.id - b.id);
-        setCategories(allCategories);
+      allCategories = allCategories.sort((a, b) => a.id - b.id);
+      setCategories(allCategories);
       } catch (error) {
         console.error("Error fetching categories:", error);
       }

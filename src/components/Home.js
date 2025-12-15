@@ -18,55 +18,55 @@ const HomePage = ({ setActiveTab, setCategoryId, setCartNumber, cartNumber, setA
   useEffect(() => {
     async function fetchData() {
       try {
-        // Fetch all items
+      // Fetch all items
         const allItemsRes = await apiCall('/get/items');
         let allItems = allItemsRes.body || [];
         allItems = allItems.filter(cat => cat.location === localStorage.getItem('userCity'));
-        const popular_items = allItems.filter(item => item.popular_item);
-        const new_arrivals = allItems.filter(item => item.new_arrival);
+      const popular_items = allItems.filter(item => item.popular_item);
+      const new_arrivals = allItems.filter(item => item.new_arrival);
 
-        setPopularItems(popular_items);
-        setNewArrivals(new_arrivals);
+      setPopularItems(popular_items);
+      setNewArrivals(new_arrivals);
       } catch (error) {
         console.error("Error fetching items:", error);
       }
 
       try {
-        // Fetch all categories
+      // Fetch all categories
         const allCategoriesRes = await fetch(`${API_ENDPOINTS.GET_CATEGORIES}?location=${localStorage.getItem('userCity')}`);
-        let allCategories = await allCategoriesRes.json();
-        setAppStatus(allCategories.app_status);
+      let allCategories = await allCategoriesRes.json();
+      setAppStatus(allCategories.app_status);
         allCategories = allCategories.body || [];
         allCategories = allCategories.filter(cat => cat.location === localStorage.getItem('userCity'));
-        allCategories = allCategories.sort((a, b) => a.id - b.id);
+      allCategories = allCategories.sort((a, b) => a.id - b.id);
 
-        setCategories(allCategories);
+      setCategories(allCategories);
       } catch (error) {
         console.error("Error fetching categories:", error);
       }
 
       try {
-        // Fetch cart items
+      // Fetch cart items
         const cartRes = await apiCall('/get/cart', {
           body: {
             userId: localStorage.getItem('userID'),
             location: localStorage.getItem('userCity')
           }
-        });
+      });
         let cartData = cartRes.body || [];
-        setCartNumber(cartData.reduce((sum, item) => sum + item.quantity, 0));
+      setCartNumber(cartData.reduce((sum, item) => sum + item.quantity, 0));
 
-        const cartItemsMap = cartData.reduce((acc, item) => {
-          acc[item.item_id] = item.quantity;
-          return acc;
-        }, {});
-        setCartItems(cartItemsMap);
+      const cartItemsMap = cartData.reduce((acc, item) => {
+        acc[item.item_id] = item.quantity;
+        return acc;
+      }, {});
+      setCartItems(cartItemsMap);
       } catch (error) {
         console.error("Error fetching cart:", error);
       }
 
       try {
-        // fetch contact details
+      // fetch contact details
         const contactDetData = await apiCall('/contact/details');
         setDetails(contactDetData.body || []);
       } catch (error) {
@@ -86,10 +86,10 @@ const HomePage = ({ setActiveTab, setCategoryId, setCartNumber, cartNumber, setA
           body: {
             user_id: localStorage.getItem('userID')
           }
-        });
+      });
         let allWishlistItems = allWishlistItemRes.body || [];
-        allWishlistItems = allWishlistItems.length ? allWishlistItems.map(wish => wish.id) : [];
-        setWishlistItems(allWishlistItems);
+      allWishlistItems = allWishlistItems.length ? allWishlistItems.map(wish => wish.id) : [];
+      setWishlistItems(allWishlistItems);
       } catch (error) {
         console.error("Error fetching wishlist:", error);
       }

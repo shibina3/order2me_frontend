@@ -65,10 +65,10 @@ export default function Items({ activeTab, categoryId, setCartNumber, cartNumber
                     body: {
                         user_id: localStorage.getItem('userID')
                     }
-                });
+            });
                 let allWishlistItems = allWishlistItemRes.body || [];
-                allWishlistItems = allWishlistItems.length ? allWishlistItems.map(wish => wish.id) : [];
-                setWishlistItems(allWishlistItems);
+            allWishlistItems = allWishlistItems.length ? allWishlistItems.map(wish => wish.id) : [];
+            setWishlistItems(allWishlistItems);
             } catch (error) {
                 console.error("Error fetching wishlist:", error);
             }

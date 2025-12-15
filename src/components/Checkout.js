@@ -33,14 +33,14 @@ const Checkout = ({ setActivePage, city, setCartNumber }) => {
             userId: localStorage.getItem('userID'),
             location: localStorage.getItem('userCity')
           }
-        });
+      });
         setWallet(cartRes.wallet);
         let cartData = cartRes.body || [];
-        setItems(cartData);
+      setItems(cartData);
 
-        const total = cartData.reduce((sum, item) => sum + item.amount * item.quantity, 0);
-        setTotalforWallet(total);
-        setTotalAmount(total);
+      const total = cartData.reduce((sum, item) => sum + item.amount * item.quantity, 0);
+      setTotalforWallet(total);
+      setTotalAmount(total);
       } catch (error) {
         console.error("Error fetching cart:", error);
       }
@@ -48,10 +48,10 @@ const Checkout = ({ setActivePage, city, setCartNumber }) => {
       try {
         const fetchDeliveryfee = await apiCall('/get/delivery_fee', {
           body: { city: city }
-        });
+      });
         let delivery_fee = fetchDeliveryfee.body || [];
-        setAllDeliveryFee(delivery_fee);
-        setDeliveryFee(parseInt(delivery_fee[0].delivery_fee));
+      setAllDeliveryFee(delivery_fee);
+      setDeliveryFee(parseInt(delivery_fee[0].delivery_fee));
       } catch (error) {
         console.error("Error fetching delivery fee:", error);
       }
@@ -59,8 +59,8 @@ const Checkout = ({ setActivePage, city, setCartNumber }) => {
       try {
         const fetchTimeSlots = await apiCall('/get/time_slots');
         let timeSlots = fetchTimeSlots.body || [];
-        setTimeSlots(timeSlots);
-        setSelectedTimeSlot(timeSlots[0].from_time + ' - ' + timeSlots[0].to_time);
+      setTimeSlots(timeSlots);
+      setSelectedTimeSlot(timeSlots[0].from_time + ' - ' + timeSlots[0].to_time);
       } catch (error) {
         console.error("Error fetching time slots:", error);
       }
@@ -116,20 +116,20 @@ const Checkout = ({ setActivePage, city, setCartNumber }) => {
     try {
       const placeOrder = await apiCall('/post/orders', {
         body: {
-          user_id: localStorage.getItem('userID'),
-          address: address,
-          phone_number: phoneNumber,
-          payment_method: paymentMethod,
-          items: items,
-          selectedTimeSlot: selectedTimeSlot,
-          instructions: instructions,
+        user_id: localStorage.getItem('userID'),
+        address: address,
+        phone_number: phoneNumber,
+        payment_method: paymentMethod,
+        items: items,
+        selectedTimeSlot: selectedTimeSlot,
+        instructions: instructions,
           useWallet: useWallet
         }
-      });
+    });
 
-      if (placeOrder?.message) {
-        setCartNumber(0);
-        setActivePage('order_placed');
+    if (placeOrder?.message) {
+      setCartNumber(0);
+      setActivePage('order_placed');
       }
     } catch (error) {
       console.error("Error placing order:", error);
@@ -147,7 +147,7 @@ const Checkout = ({ setActivePage, city, setCartNumber }) => {
     try {
       const promoCodeRes = await apiCall('/get/promo-code', {
         body: { code: promoCode }
-      });
+    });
       let promoCodeData = promoCodeRes.body || [];
 
     if (promoCodeData.length) {

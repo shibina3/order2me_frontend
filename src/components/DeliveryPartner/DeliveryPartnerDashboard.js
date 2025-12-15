@@ -15,9 +15,9 @@ const DeliveryPartnerDashboard = (props) => {
           try {
             const allOrdersRes = await apiCall('/get/orders');
             let allOrders = allOrdersRes.body || [];
-            allOrders = allOrders.sort((a, b) => a.id - b.id);
-            setOrders(allOrders);
-    
+          allOrders = allOrders.sort((a, b) => a.id - b.id);
+          setOrders(allOrders);
+  
             const allDelivers = await apiCall('/get/delivers');
             let delivers = allDelivers.body || [];
             // eslint-disable-next-line
@@ -76,17 +76,17 @@ const DeliveryPartnerDashboard = (props) => {
         try {
           const data = await apiCall('/verify/otp', {
             body: { otp, order_id }
-          });
-          const verified = data?.success;
+        });
+        const verified = data?.success;
 
-          if (!verified) {
-              setOtpError("Invalid OTP");
-              return false;
-          }
+        if (!verified) {
+            setOtpError("Invalid OTP");
+            return false;
+        }
 
-          setOtpError(""); 
-          setOtp("");
-          return true;
+        setOtpError(""); 
+        setOtp("");
+        return true;
         } catch (error) {
           console.error("Error verifying OTP:", error);
           setOtpError("Error verifying OTP");

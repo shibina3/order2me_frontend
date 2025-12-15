@@ -130,7 +130,7 @@ export default function Wishlist({ setCartNumber }) {
                     amount: selectedPriceDetail.amount, 
                     product_quantity: selectedPriceDetail.quantity,
                     itemId: itemId,
-                    user_id: localStorage.getItem('userID')
+                    user_id: localStorage.getItem('userID') 
                 }
             });
             let newCartItems = { ...cartItems, [itemId]: newQuantity };

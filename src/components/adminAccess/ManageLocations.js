@@ -21,11 +21,11 @@ const ManageLocations = (props) => {
         try {
           const getLocRes = await apiCall('/get/location');
           let getLocData = getLocRes.body || [];
-          setLocations(getLocData);
+      setLocations(getLocData);
         } catch (error) {
           console.error("Error fetching locations:", error);
         }
-        setLoading(false);
+      setLoading(false);
     }, 1000); 
   };
 
@@ -37,11 +37,11 @@ const ManageLocations = (props) => {
     try {
       const addLocData = await apiCall('/add/location', {
         body: { name: newLocation }
-      });
-      if (addLocData.message === "Location Added") {
-        setLocations([...locations, { id: locations.length + 1, name: newLocation }]);
-        setNewLocation(''); 
-        setShowAddLocationForm(false);
+    });
+    if (addLocData.message === "Location Added") {
+      setLocations([...locations, { id: locations.length + 1, name: newLocation }]);
+      setNewLocation(''); 
+      setShowAddLocationForm(false);
       }
     } catch (error) {
       console.error("Error adding location:", error);
@@ -52,9 +52,9 @@ const ManageLocations = (props) => {
     try {
       const deleteLocData = await apiCall('/delete/location', {
         body: { id: id }
-      });
-      if (deleteLocData.message === "Location Deleted") {
-        setLocations(locations.filter(location => location.id !== id));
+    });
+    if (deleteLocData.message === "Location Deleted") {
+      setLocations(locations.filter(location => location.id !== id));
       }
     } catch (error) {
       console.error("Error deleting location:", error);

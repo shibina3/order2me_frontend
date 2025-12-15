@@ -1,5 +1,7 @@
 // API Configuration
 // Update this with your Hetzner server URL when deploying
+// For production with HTTPS: https://order2me.in/api
+// For local development: http://localhost:3001
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001';
 
 export const API_ENDPOINTS = {

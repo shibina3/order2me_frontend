@@ -26,10 +26,10 @@ const AppNavbar = (props) => {
         // Backend returns { message: "...", data: {...} }
         let userData = userDetailRes.data || {};
         if(userData.admin) {
-          setAdmin(true);
-        }
+        setAdmin(true);
+      }
         if(userData.delivery_partner) {
-          setDeliveryPartner(true);
+        setDeliveryPartner(true);
         }
         setWallet(userData.wallet || 0);
       } catch (error) {

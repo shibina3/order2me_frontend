@@ -12,9 +12,9 @@ const PurchaseHistory = () => {
       try {
         const purchaseRes = await apiCall('/get/purchases', {
           body: { userId: localStorage.getItem('userID') }
-        });
+      });
         let purchaseData = purchaseRes.body || [];
-        setPurchases(purchaseData);
+      setPurchases(purchaseData);
       } catch (error) {
         console.error("Error fetching purchases:", error);
       }

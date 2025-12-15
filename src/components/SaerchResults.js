@@ -17,23 +17,23 @@ export default function SearchResults({ setCartNumber }) {
                 let itemsData = itemsRes.body || [];
                 itemsData = itemsData.filter(cat => cat.location === localStorage.getItem('userCity'));
 
-                // Fetch items in the cart
+            // Fetch items in the cart
                 const cartRes = await apiCall('/get/cart', {
                     body: {
                         userId: localStorage.getItem('userID'),
                         location: localStorage.getItem('userCity')
                     }
-                });
+            });
                 let cartData = cartRes.body || [];
 
-                const cartMap = cartData.reduce((acc, item) => {
-                    acc[item.item_id] = item.quantity;
-                    return acc;
-                }, {});
+            const cartMap = cartData.reduce((acc, item) => {
+                acc[item.item_id] = item.quantity;
+                return acc;
+            }, {});
 
-                setItems(itemsData);
-                setCartItems(cartMap);
-                setCartNumber(Object.values(cartMap).reduce((sum, item) => sum + item, 0));
+            setItems(itemsData);
+            setCartItems(cartMap);
+            setCartNumber(Object.values(cartMap).reduce((sum, item) => sum + item, 0));
             } catch (error) {
                 console.error("Error fetching data:", error);
             }
@@ -44,10 +44,10 @@ export default function SearchResults({ setCartNumber }) {
                     body: {
                         user_id: localStorage.getItem('userID')
                     }
-                });
+            });
                 let allWishlistItems = allWishlistItemRes.body || [];
-                allWishlistItems = allWishlistItems.length ? allWishlistItems.map(wish => wish.id) : [];
-                setWishlistItems(allWishlistItems);
+            allWishlistItems = allWishlistItems.length ? allWishlistItems.map(wish => wish.id) : [];
+            setWishlistItems(allWishlistItems);
             } catch (error) {
                 console.error("Error fetching wishlist:", error);
             }

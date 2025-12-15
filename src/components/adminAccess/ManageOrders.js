@@ -20,9 +20,9 @@ const ManageOrders = (props) => {
 
         const allUsers = await apiCall('/get/users');
         let users = allUsers.body || [];
-        let delivery_partners = users.filter(user => user.delivery_partner);
-        
-        setDeliveryPartners(delivery_partners);
+          let delivery_partners = users.filter(user => user.delivery_partner);
+          
+          setDeliveryPartners(delivery_partners);
 
         const allDelivers = await apiCall('/get/delivers');
         let delivers = allDelivers.body || [];          
