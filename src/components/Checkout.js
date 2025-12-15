@@ -24,6 +24,13 @@ const Checkout = ({ setActivePage, city, setCartNumber }) => {
   const [promoCode, setPromoCode] = useState('');
   const [applyBtnText, setApplyBtnText] = useState('Apply');
   const [discount, setDiscount] = useState(0);
+  const [showQrModal, setShowQrModal] = useState(false);
+
+  // UPI / QR details
+  const UPI_ID = '6379103258@pthdfc';
+  const UPI_PAYEE = 'Order2me Fresh Mart';
+  const upiString = `upi://pay?pa=${UPI_ID}&pn=${encodeURIComponent(UPI_PAYEE)}&cu=INR`;
+  const qrUrl = `https://chart.googleapis.com/chart?chs=320x320&cht=qr&chl=${encodeURIComponent(upiString)}`;
 
   useEffect(() => {
     async function fetchItems() {
@@ -406,33 +413,15 @@ const Checkout = ({ setActivePage, city, setCartNumber }) => {
       <div className="payment-method-section mb-4">
         <h4>Payment Method</h4>
         <div>
-          {/* <label className="mr-3">
-            <input 
-              type="radio" 
-              name="paymentMethod" 
-              value="phonepe" 
-              onChange={() => setPaymentMethod('phonepe')} 
-            /> PhonePe
+          <label className="mr-3 mt-3 d-flex gap-2 align-items-center">
+            <input
+              type="radio"
+              name="paymentMethod"
+              value="upi_qr"
+              onChange={() => { setPaymentMethod('upi_qr'); setShowQrModal(true); }}
+            /> Pay using UPI QR
           </label>
           <br />
-          <label className="mr-3 mt-3">
-            <input 
-              type="radio" 
-              name="paymentMethod" 
-              value="gpay" 
-              onChange={() => setPaymentMethod('gpay')} 
-            /> Google Pay
-          </label>
-          <br />
-          <label className="mr-3 mt-3">
-            <input 
-              type="radio" 
-              name="paymentMethod" 
-              value="paytm" 
-              onChange={() => setPaymentMethod('paytm')} 
-            /> Paytm
-          </label>
-          <br /> */}
           <label className="mr-3 mt-3">
             <input
               type="radio"
@@ -454,6 +443,38 @@ const Checkout = ({ setActivePage, city, setCartNumber }) => {
           Pay and Order
         </button>
       </div>
+
+      {/* QR Modal */}
+      {showQrModal && (
+        <div className="modal d-block" style={{ background: 'rgba(0,0,0,0.4)' }}>
+          <div className="modal-dialog modal-dialog-centered">
+            <div className="modal-content p-3">
+              <div className="modal-header">
+                <h5 className="modal-title">Scan & Pay via UPI</h5>
+                <button type="button" className="btn-close" onClick={() => setShowQrModal(false)} />
+              </div>
+              <div className="modal-body text-center">
+                <img src={qrUrl} alt="UPI QR" style={{ maxWidth: '320px', width: '100%' }} />
+                <p className="mt-3 mb-1"><strong>Payee:</strong> {UPI_PAYEE}</p>
+                <p className="mb-2"><strong>UPI ID:</strong> {UPI_ID}</p>
+                <button
+                  className="btn btn-outline-secondary btn-sm"
+                  onClick={() => navigator.clipboard?.writeText(UPI_ID)}
+                >
+                  Copy UPI ID
+                </button>
+                <p className="text-muted mt-3" style={{ fontSize: '12px' }}>
+                  After payment, tap “Pay and Order” to place your order. If you close this, you can reopen by selecting “Pay using UPI QR”.
+                </p>
+              </div>
+              <div className="modal-footer">
+                <button className="btn btn-secondary" onClick={() => setShowQrModal(false)}>Close</button>
+                <button className="btn btn-success" onClick={() => { setPaymentMethod('upi_qr'); setShowQrModal(false); }}>I have scanned</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

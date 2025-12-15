@@ -76,21 +76,28 @@ const ManageDeliveryCharges = (props) => {
           location: newArea.location
         }
       });
-      result = result.body || [];
-      setAlertMessage('Area added successfully');
-      setAlertType('success');
-      setShow(true);
-      setNewArea({ location: '', delivery_fee: '', area_name: '' });
-      setShowAddForm(false); 
-      setAreaDetails(result);
-      const newAreaId = result.find(area => area.area_name === newArea.area_name)?.area_id; // Find the new area's id
-      setUpdatedAreaDetails(prevDetails => ({
-        ...prevDetails,
-        [newAreaId]: {
-          area_name: newArea.area_name,
-          delivery_fee: newArea.delivery_fee,
-        }
-      }));
+      const updatedList = result.body || [];
+
+      if (Array.isArray(updatedList) && updatedList.length >= 0) {
+        setAlertMessage('Area added successfully');
+        setAlertType('success');
+        setShow(true);
+        setNewArea({ location: '', delivery_fee: '', area_name: '' });
+        setShowAddForm(false); 
+        setAreaDetails(updatedList);
+        const newAreaId = updatedList.find(area => area.area_name === newArea.area_name)?.area_id; // Find the new area's id
+        setUpdatedAreaDetails(prevDetails => ({
+          ...prevDetails,
+          [newAreaId]: {
+            area_name: newArea.area_name,
+            delivery_fee: newArea.delivery_fee,
+          }
+        }));
+      } else {
+        setAlertMessage("Error adding area");
+        setAlertType('danger');
+        setShow(true);
+      }
     } catch (error) {
       console.error("Error adding area:", error);
       setAlertMessage("Error adding area");
