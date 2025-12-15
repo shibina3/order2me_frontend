@@ -31,7 +31,8 @@ const Checkout = ({ setActivePage, city, setCartNumber }) => {
   const UPI_PAYEE = 'Order2me Fresh Mart';
   // Build UPI deep link (no inner encoding), then encode once for the QR generator
   const upiString = `upi://pay?pa=${UPI_ID}&pn=${UPI_PAYEE}&cu=INR`;
-  const qrUrl = `https://chart.googleapis.com/chart?chs=320x320&cht=qr&chl=${encodeURIComponent(upiString)}`;
+  // Use qrserver (reliable) to render the QR; one encode for the data payload
+  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=320x320&data=${encodeURIComponent(upiString)}`;
 
   useEffect(() => {
     async function fetchItems() {
