@@ -29,9 +29,8 @@ const Checkout = ({ setActivePage, city, setCartNumber }) => {
   // UPI / QR details
   const UPI_ID = '6379103258@pthdfc';
   const UPI_PAYEE = 'Order2me Fresh Mart';
-  // Build UPI deep link, then encode once for the QR generator
-  // pa must not be double-encoded; pn can be encoded safely
-  const upiString = `upi://pay?pa=${UPI_ID}&pn=${encodeURIComponent(UPI_PAYEE)}&cu=INR`;
+  // Build UPI deep link (no inner encoding), then encode once for the QR generator
+  const upiString = `upi://pay?pa=${UPI_ID}&pn=${UPI_PAYEE}&cu=INR`;
   const qrUrl = `https://chart.googleapis.com/chart?chs=320x320&cht=qr&chl=${encodeURIComponent(upiString)}`;
 
   useEffect(() => {
