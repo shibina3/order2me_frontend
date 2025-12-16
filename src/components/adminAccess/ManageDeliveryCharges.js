@@ -79,20 +79,20 @@ const ManageDeliveryCharges = (props) => {
       const updatedList = result.body || [];
 
       if (Array.isArray(updatedList) && updatedList.length >= 0) {
-        setAlertMessage('Area added successfully');
-        setAlertType('success');
-        setShow(true);
-        setNewArea({ location: '', delivery_fee: '', area_name: '' });
-        setShowAddForm(false); 
+      setAlertMessage('Area added successfully');
+      setAlertType('success');
+      setShow(true);
+      setNewArea({ location: '', delivery_fee: '', area_name: '' });
+      setShowAddForm(false); 
         setAreaDetails(updatedList);
         const newAreaId = updatedList.find(area => area.area_name === newArea.area_name)?.area_id; // Find the new area's id
-        setUpdatedAreaDetails(prevDetails => ({
-          ...prevDetails,
-          [newAreaId]: {
-            area_name: newArea.area_name,
-            delivery_fee: newArea.delivery_fee,
-          }
-        }));
+      setUpdatedAreaDetails(prevDetails => ({
+        ...prevDetails,
+        [newAreaId]: {
+          area_name: newArea.area_name,
+          delivery_fee: newArea.delivery_fee,
+        }
+      }));
       } else {
         setAlertMessage("Error adding area");
         setAlertType('danger');
@@ -182,52 +182,52 @@ const ManageDeliveryCharges = (props) => {
       </nav>
 
       {!loading && (
-        <div className="d-flex justify-content-between">
-          <Button className='ms-0 mb-4' variant="success" onClick={() => addDeliveryCharge()}>
-            Add Delivery Charge
-          </Button>
-        </div>
+                  <div className="d-flex justify-content-between">
+                    <Button className='ms-0 mb-4' variant="success" onClick={() => addDeliveryCharge()}>
+                      Add Delivery Charge
+                    </Button>
+                  </div>
       )}
 
-      {showAddForm && (
+                  {showAddForm && (
         <div className="mt-2 mb-4">
-          <h5>Add New Delivery Charge</h5>
-          <Form.Group controlId="formLocation">
-            <Form.Label>Location</Form.Label>
-            <Form.Select 
-              value={newArea.location}
-              onChange={(e) => handleNewAreaInputChange('location', e.target.value)}
-            >
-              <option value="">Select Location</option>
-              {locations.map((loc, index) => (
-                <option key={index} value={loc}>{loc}</option>
-              ))}
-            </Form.Select>
-          </Form.Group>
-          
-          <Form.Group controlId="formAreaName" className="mt-3">
-            <Form.Label>Area Name</Form.Label>
-            <Form.Control
-              type="text"
-              value={newArea.area_name}
-              onChange={(e) => handleNewAreaInputChange('area_name', e.target.value)}
-            />
-          </Form.Group>
-          
-          <Form.Group controlId="formDeliveryFee" className="mt-3">
-            <Form.Label>Delivery Fee</Form.Label>
-            <Form.Control
-              type="text"
-              value={newArea.delivery_fee}
-              onChange={(e) => handleNewAreaInputChange('delivery_fee', e.target.value)}
-            />
-          </Form.Group>
+                      <h5>Add New Delivery Charge</h5>
+                      <Form.Group controlId="formLocation">
+                        <Form.Label>Location</Form.Label>
+                        <Form.Select 
+                          value={newArea.location}
+                          onChange={(e) => handleNewAreaInputChange('location', e.target.value)}
+                        >
+                          <option value="">Select Location</option>
+                          {locations.map((loc, index) => (
+                            <option key={index} value={loc}>{loc}</option>
+                          ))}
+                        </Form.Select>
+                      </Form.Group>
+                      
+                      <Form.Group controlId="formAreaName" className="mt-3">
+                        <Form.Label>Area Name</Form.Label>
+                        <Form.Control
+                          type="text"
+                          value={newArea.area_name}
+                          onChange={(e) => handleNewAreaInputChange('area_name', e.target.value)}
+                        />
+                      </Form.Group>
+                      
+                      <Form.Group controlId="formDeliveryFee" className="mt-3">
+                        <Form.Label>Delivery Fee</Form.Label>
+                        <Form.Control
+                          type="text"
+                          value={newArea.delivery_fee}
+                          onChange={(e) => handleNewAreaInputChange('delivery_fee', e.target.value)}
+                        />
+                      </Form.Group>
 
-          <Button className="mt-3" variant="success" onClick={handleSaveNewArea}>
-            Save
-          </Button>
-        </div>
-      )}
+                      <Button className="mt-3" variant="success" onClick={handleSaveNewArea}>
+                        Save
+                      </Button>
+                    </div>
+                  )}
 
       {loading && <p>Loading area details...</p>}
       {!loading && areaDetails.length > 0 && (

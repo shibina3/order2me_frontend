@@ -420,6 +420,7 @@ const Checkout = ({ setActivePage, city, setCartNumber }) => {
               type="radio"
               name="paymentMethod"
               value="upi_qr"
+              checked={paymentMethod === 'upi_qr'}
               onChange={() => { setPaymentMethod('upi_qr'); setShowQrModal(true); }}
             /> Pay using UPI QR
           </label>
@@ -429,6 +430,7 @@ const Checkout = ({ setActivePage, city, setCartNumber }) => {
               type="radio"
               name="paymentMethod"
               value="cod"
+              checked={paymentMethod === 'cod'}
               onChange={() => setPaymentMethod('cod')}
             /> Cash on Delivery
           </label>
